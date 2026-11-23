@@ -12,11 +12,11 @@
   const teamNames=["Morais FC","Rivais FC","Apucarana","São Paulo","Palmeiras","Santos","Flamengo","Corinthians","Brasil","Argentina"];
   for(const id of ["homeTeam","awayTeam"]) teamNames.forEach(n=>{if(![...$(id).options].some(o=>o.value===n)){const o=document.createElement("option");o.textContent=n;o.value=n;$(id).append(o)}});
   const teamColor=t=>t===0?"#d9f34e":"#f5f5f5";
-  function makePlayer(x,y,team,index){return {x,y,homeX:x,homeY:y,team,index,keeper:index===0,r:index===0?13:10,speed:index===0?2.3:2.65,face:team===0?1:-1};}
+  function makePlayer(x,y,team,index){return {x,y,px:x,py:y,vx:0,vy:0,homeX:x,homeY:y,team,index,keeper:index===0,r:index===0?13:10,speed:index===0?150:178,face:team===0?1:-1,stamina:1};}
   function setup(){
     players=[];
     for(let t=0;t<2;t++) formations[t].forEach((pos,i)=>players.push(makePlayer(pos.x*W,pos.y*H,t,i)));
-    ball={x:W/2,y:H/2,vx:0,vy:0,r:8,owner:null};
+    ball={x:W/2,y:H/2,vx:0,vy:0,r:8,owner:null,spin:0};
     activePlayer=players.find(p=>p.team===0&&p.index===9);
     kickoffTimer=700;updateScore();
   }
@@ -69,26 +69,56 @@
     if(type==="shoot"){
       const targetX=dir===1?W-10:10,targetY=clamp(H/2+(ball.y-H/2)*.38,GOAL_TOP+12,GOAL_BOTTOM-12);
       const dx=targetX-ball.x,dy=targetY-ball.y,len=Math.hypot(dx,dy)||1;
-      ball.vx=dx/len*12.5;ball.vy=dy/len*12.5;ball.owner=null;
+      ball.vx=dx/len*560+(p.vx||0)*.22;ball.vy=dy/len*560+(p.vy||0)*.22;ball.owner=null;ball.spin=(Math.random()-.5)*2.4;
       $("status").textContent="CHUTE! ⚽";
     }else{
       const mates=players.filter(q=>q.team===p.team&&q!==p&&!q.keeper);
       const target=mates.sort((a,b)=>((b.x-p.x)*dir)-((a.x-p.x)*dir))[0];
-      if(target){const dx=target.x-ball.x,dy=target.y-ball.y,len=Math.hypot(dx,dy)||1;ball.vx=dx/len*8.5;ball.vy=dy/len*8.5;ball.owner=null}
+      if(target){const dx=target.x-ball.x,dy=target.y-ball.y,len=Math.hypot(dx,dy)||1;ball.vx=dx/len*350+(p.vx||0)*.18;ball.vy=dy/len*350+(p.vy||0)*.18;ball.owner=null;ball.spin=(Math.random()-.5)*.8}
       $("status").textContent="Passe!";
     }
   }
-  function movePlayer(p,dx,dy,scale){
-    const len=Math.hypot(dx,dy);if(!len)return;
-    p.x=clamp(p.x+dx/len*p.speed*scale,30,W-30);p.y=clamp(p.y+dy/len*p.speed*scale,30,H-30);
-    if(Math.abs(dx)>.1)p.face=dx>0?1:-1;
+  function movePlayer(p,dx,dy,dt,boost=1){
+    const len=Math.hypot(dx,dy),max=p.speed*boost;
+    const tx=len?dx/len*max:0,ty=len?dy/len*max:0;
+    const response=Math.min(1,dt*(len?8.5:10.5));
+    p.vx+=(tx-p.vx)*response;p.vy+=(ty-p.vy)*response;
+    p.x=clamp(p.x+p.vx*dt,30,W-30);p.y=clamp(p.y+p.vy*dt,30,H-30);
+    if(Math.abs(p.vx)>8)p.face=p.vx>0?1:-1;
+  }
+  function separatePlayers(){
+    for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){
+      const a=players[i],b=players[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.001,min=a.r+b.r+2;
+      if(d<min){
+        const push=(min-d)*.5, nx=dx/d,ny=dy/d;
+        a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;
+        const rel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+        if(rel>0){a.vx-=nx*rel*.35;a.vy-=ny*rel*.35;b.vx+=nx*rel*.35;b.vy+=ny*rel*.35}
+      }
+    }
+  }
+  function ballPlayerCollision(p,dt){
+    const dx=ball.x-p.x,dy=ball.y-p.y,d=Math.hypot(dx,dy)||.001,min=ball.r+p.r;
+    if(d>=min)return;
+    const nx=dx/d,ny=dy/d,overlap=min-d;
+    ball.x+=nx*overlap;ball.y+=ny*overlap;
+    const rel=(ball.vx-p.vx)*nx+(ball.vy-p.vy)*ny;
+    if(rel<0){ball.vx-=1.45*rel*nx;ball.vy-=1.45*rel*ny}
+    if(p.keeper){
+      const nearGoal=(p.team===0&&ball.x<205)||(p.team===1&&ball.x>W-205);
+      if(nearGoal&&Math.hypot(ball.vx,ball.vy)>90){
+        ball.vx=(p.team===0?1:-1)*(150+Math.random()*90);
+        ball.vy+=(ball.y-p.y)*4.5;ball.owner=null;
+      }
+    }
   }
   function resetAfterGoal(){
     players.forEach(p=>{p.x=p.homeX;p.y=p.homeY});
-    ball={x:W/2,y:H/2,vx:0,vy:0,r:8,owner:null};activePlayer=players.find(p=>p.team===0&&p.index===9);kickoffTimer=1100;
+    ball={x:W/2,y:H/2,vx:0,vy:0,r:8,owner:null,spin:0};activePlayer=players.find(p=>p.team===0&&p.index===9);kickoffTimer=1100;
   }
   function update(dt){
-    const scale=Math.min(dt/16.667,2.2);seconds+=dt/1000;updateScore();
+    const delta=Math.min(dt/1000,.04);
+    seconds+=delta;updateScore();
     if(seconds>=180){matchEnded=true;$("status").textContent="FIM DE JOGO! "+(score[0]===score[1]?"Empate":score[0]>score[1]?"Morais FC venceu!":"O adversário venceu!");return}
     if(kickoffTimer>0){kickoffTimer-=dt;return}
     const controlled=activePlayer||nearest(0);
@@ -96,36 +126,37 @@
       let dx=move.x,dy=move.y;
       if(keys.ArrowLeft||keys.a||keys.A)dx=-1;if(keys.ArrowRight||keys.d||keys.D)dx=1;
       if(keys.ArrowUp||keys.w||keys.W)dy=-1;if(keys.ArrowDown||keys.s||keys.S)dy=1;
-      movePlayer(controlled,dx,dy,scale*(sprinting?1.65:1));
-      if(dist(controlled,ball)<controlled.r+ball.r+7){
-        ball.x=controlled.x+controlled.face*18;ball.y=controlled.y+clamp((ball.y-controlled.y)*.45,-12,12);
-        ball.vx=controlled.face*1.1;ball.vy*=.6;
-      }
+      movePlayer(controlled,dx,dy,delta,sprinting?1.48:1);
     }
     players.forEach(p=>{
       if(p===controlled)return;
       let tx=p.homeX,ty=p.homeY;
       if(p.keeper){
         const goalX=p.team===0?48:W-48;
-        tx=goalX;ty=clamp(ball.y,GOAL_TOP+18,GOAL_BOTTOM-18);
-        if((p.team===0&&ball.x<260)||(p.team===1&&ball.x>W-260))tx=clamp(ball.x,goalX-35,goalX+35);
+        tx=goalX;ty=clamp(ball.y,GOAL_TOP+20,GOAL_BOTTOM-20);
+        if((p.team===0&&ball.x<265)||(p.team===1&&ball.x>W-265))tx=clamp(ball.x,goalX-48,goalX+48);
       }else{
         const chaser=nearest(p.team);
-        if(p===chaser){tx=ball.x;ty=ball.y}
-        else{tx=p.homeX+(ball.x-W/2)*(p.team===0?.13:-.13);ty=p.homeY+(ball.y-H/2)*.10}
+        if(p===chaser){tx=ball.x+(p.team===0?-13:13);ty=ball.y}
+        else{tx=p.homeX+(ball.x-W/2)*(p.team===0?.16:-.16);ty=p.homeY+(ball.y-H/2)*.13}
       }
-      const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy)||1,step=Math.min(p.speed*scale*(p===nearest(p.team)?1.05:.55),d);
-      p.x+=dx/d*step;p.y+=dy/d*step;
-      if(p.team===1&&!p.keeper&&dist(p,ball)<p.r+ball.r+8){
-        const attackDir=-1;ball.vx=attackDir*(p.keeper?0:3.5);ball.vy=(Math.random()-.5)*3;ball.owner=null;
-      }
+      const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy)||1;
+      const desired=d>5?1:0;
+      movePlayer(p,desired?dx:0,desired?dy:0,delta,p===nearest(p.team)?1.04:.82);
     });
-    ball.x+=ball.vx*scale;ball.y+=ball.vy*scale;ball.vx*=Math.pow(.985,scale);ball.vy*=Math.pow(.985,scale);
-    if(ball.y<27||ball.y>H-27){ball.y=clamp(ball.y,27,H-27);ball.vy*=-.78}
+    separatePlayers();
+    players.forEach(p=>ballPlayerCollision(p,delta));
+    ball.x+=ball.vx*delta;ball.y+=ball.vy*delta;
+    const drag=Math.pow(.986,delta*60);
+    ball.vx*=drag;ball.vy*=drag;ball.spin*=Math.pow(.94,delta*60);
+    ball.vy+=ball.spin*delta*5;
+    const speed=Math.hypot(ball.vx,ball.vy);
+    if(speed<7){ball.vx=0;ball.vy=0}
+    if(ball.y<27||ball.y>H-27){ball.y=clamp(ball.y,27,H-27);ball.vy*=-.72;ball.vx*=.92}
     if(ball.x<18||ball.x>W-18){
       if(ball.y>GOAL_TOP&&ball.y<GOAL_BOTTOM){
         const scorer=ball.x>W/2?0:1;score[scorer]++;$("status").textContent="GOOOOL! ⚽";updateScore();resetAfterGoal();
-      }else{ball.x=clamp(ball.x,18,W-18);ball.vx*=-.72}
+      }else{ball.x=clamp(ball.x,18,W-18);ball.vx*=-.68;ball.vy*=.88}
     }
     ball.x=clamp(ball.x,18,W-18);ball.y=clamp(ball.y,27,H-27);
   }
