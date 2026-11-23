@@ -178,8 +178,8 @@
   window.addEventListener("keyup",e=>keys[e.key]=false);
   document.querySelectorAll("[data-dir]").forEach(btn=>{
     const v={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[btn.dataset.dir];
-    const on=e=>{e.preventDefault();move={x:v[0],y:v[1]}},off=()=>{move={x:0,y:0}};
-    btn.addEventListener("pointerdown",on);["pointerup","pointerleave","pointercancel","lostpointercapture"].forEach(ev=>btn.addEventListener(ev,off));
+    const on=e=>{e.preventDefault();try{btn.setPointerCapture(e.pointerId)}catch(_){}move={x:v[0],y:v[1]}},off=()=>{move={x:0,y:0}};
+    btn.addEventListener("pointerdown",on);["pointerup","pointercancel","lostpointercapture"].forEach(ev=>btn.addEventListener(ev,off));
   });
   canvas.addEventListener("pointerdown",e=>{
     if(!running||paused)return;const rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)*W/rect.width,y=(e.clientY-rect.top)*H/rect.height;
