@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#101812">
+  <meta name="description" content="Morais Football: futebol 2D para jogar no celular e computador.">
+  <title>Morais Football</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar"><div class="brand-mark">MF</div><div><strong>MORAIS <span>FOOTBALL</span></strong><small>O jogo começa aqui</small></div><span class="version">PROTÓTIPO 0.1</span></header>
+    <section id="menu" class="menu panel">
+      <p class="eyebrow">FUTEBOL • PAIXÃO • COMPETIÇÃO</p>
+      <h1>Entre em campo.</h1><p class="intro">Monte seu confronto e dispute uma partida rápida.</p>
+      <div class="selectors">
+        <label>SEU TIME<select id="homeTeam"><option>Morais FC</option><option>Apucarana</option><option>São Paulo</option><option>Palmeiras</option><option>Santos</option><option>Flamengo</option><option>Corinthians</option><option>Brasil</option><option>Argentina</option></select></label>
+        <div class="versus">VS</div>
+        <label>ADVERSÁRIO<select id="awayTeam"><option>Rivais FC</option><option>Apucarana</option><option>São Paulo</option><option>Palmeiras</option><option>Santos</option><option>Flamengo</option><option>Corinthians</option><option>Brasil</option><option>Argentina</option></select></label>
+      </div>
+      <button id="startBtn" class="primary">▶ INICIAR PARTIDA</button>
+      <p class="hint">Controles: WASD ou setas no computador. No celular, use os botões na tela.</p>
+    </section>
+    <section id="game" class="game panel hidden">
+      <div class="scorebar"><div id="homeLabel">MORAIS FC</div><strong><span id="homeScore">0</span> <i>:</i> <span id="awayScore">0</span></strong><div id="awayLabel">RIVAIS FC</div><time id="clock">00:00</time></div>
+      <div class="pitch-wrap"><canvas id="pitch" width="900" height="560" aria-label="Campo de futebol 2D"></canvas></div>
+      <div class="mobile-controls">
+        <div class="pad"><button data-dir="up">▲</button><div><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div></div>
+        <div class="actions"><button id="passBtn">PASSE</button><button id="shootBtn">CHUTE</button></div>
+      </div>
+      <div class="game-footer"><span id="status">Partida em andamento</span><button id="pauseBtn" class="secondary">PAUSAR</button><button id="backBtn" class="secondary">MENU</button></div>
+    </section>
+    <footer> MORАIS FOOTBALL <span>•</span> Projeto independente em desenvolvimento</footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
