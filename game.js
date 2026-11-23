@@ -28,11 +28,11 @@ function makePlayer(team,index,x,z){
  const group=new THREE.Group(),shirt=mat(team===0?0xb8e83f:0xf0f2ee),shorts=mat(team===0?0x17251b:0x252b31),skin=mat(0xd7a47b),boots=mat(0x101010);
  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.62,4,8),shirt);body.position.y=1.05;group.add(body);
  const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),skin);head.position.y=1.82;group.add(head);
- const legGeo=new THREE.CapsuleGeometry(.13,.48,3,6);
- for(const side of [-1,1]){const leg=new THREE.Mesh(legGeo,shorts);leg.position.set(side*.19,.42,0);group.add(leg);const foot=new THREE.Mesh(new THREE.BoxGeometry(.2,.12,.38),boots);foot.position.set(side*.19,.12,-.12);group.add(foot)}
+ const legGeo=new THREE.CapsuleGeometry(.13,.48,3,6),legs=[];
+ for(const side of [-1,1]){const leg=new THREE.Mesh(legGeo,shorts);leg.position.set(side*.19,.42,0);group.add(leg);legs.push(leg);const foot=new THREE.Mesh(new THREE.BoxGeometry(.2,.12,.38),boots);foot.position.set(side*.19,.12,-.12);group.add(foot)}
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.58,.045,6,24),mat(0xffffff));ring.rotation.x=Math.PI/2;ring.position.y=.04;ring.visible=false;group.add(ring);
  group.position.set(x,0,z);scene.add(group);
- return {group,ring,team,index,x,z,vx:0,vz:0,homeX:x,homeZ:z,speed:index===0?6.2:7.2};
+ return {group,ring,legs,team,index,x,z,vx:0,vz:0,homeX:x,homeZ:z,speed:index===0?6.2:7.2};
 }
 function buildPitch(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0x9fc4d5);scene.fog=new THREE.Fog(0x9fc4d5,55,105);
@@ -101,7 +101,11 @@ function update(dt){
   let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);let speed=p.speed*(p===controlled?(sprint?1.45:1):p===nearest(p.team)?1:.72);
   if(len>0.08){p.vx+=(dx/len*speed-p.vx)*Math.min(1,dt*7);p.vz+=(dz/len*speed-p.vz)*Math.min(1,dt*7)}else{p.vx*=.8;p.vz*=.8}
   p.x=clamp(p.x+p.vx*dt,-23,23);p.z=clamp(p.z+p.vz*dt,-14,14);p.group.position.set(p.x,0,p.z);
-  if(Math.abs(p.vx)+Math.abs(p.vz)>.2)p.group.rotation.y=Math.atan2(p.vx,p.vz);
+  const velocity=Math.hypot(p.vx,p.vz);
+  if(velocity>.2)p.group.rotation.y=Math.atan2(p.vx,p.vz);
+  const stride=Math.min(1,velocity/5),phase=performance.now()*.012+(p.index%2)*Math.PI;
+  p.legs[0].rotation.x=Math.sin(phase)*.72*stride;
+  p.legs[1].rotation.x=-Math.sin(phase)*.72*stride;
  });
  // Keep player bodies from occupying the same point.
  for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){const a=players[i],b=players[j],dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz);if(d>0&&d<.8){const push=(.8-d)*.5;a.x-=dx/d*push;a.z-=dz/d*push;b.x+=dx/d*push;b.z+=dz/d*push}}
