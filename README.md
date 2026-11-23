@@ -20,3 +20,6 @@ Versão 0.1: menu, seleção básica de equipes, campo 2D, placar, cronômetro, 
 - Multiplayer online em etapa futura.
 
 Os nomes de equipes são opções demonstrativas. Escudos, uniformes e marcas oficiais só serão adicionados com os direitos ou permissões adequados.
+
+## Publicação
+O projeto é publicado automaticamente pelo GitHub Pages a cada atualização da branch `main`.
