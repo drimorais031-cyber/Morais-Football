@@ -1,5 +1,22 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
-(() => {
+(async () => {
+let THREE;
+try {
+  try {
+    THREE = await import('https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js');
+  } catch (firstError) {
+    THREE = await import('https://unpkg.com/three@0.161.0/build/three.module.js');
+  }
+} catch (loadError) {
+  console.error('Falha ao carregar o motor 3D:', loadError);
+  const viewport = document.getElementById('viewport');
+  const menu = document.getElementById('menu');
+  const message = document.createElement('div');
+  message.style.cssText = 'padding:24px;color:#fff;background:#391b1b;border:1px solid #b84b4b;border-radius:12px;margin:12px;font:14px/1.5 Arial;text-align:center';
+  message.innerHTML = '<strong>Não foi possível carregar o motor 3D.</strong><br>Verifique sua internet e tente atualizar a página. Se continuar, envie uma captura desta tela.';
+  if (menu) menu.insertAdjacentElement('afterend', message);
+  if (viewport) viewport.innerHTML = '<div style="padding:24px;color:white;text-align:center">Falha ao carregar o jogo 3D. Verifique a conexão e atualize a página.</div>';
+  return;
+}
 const $=id=>document.getElementById(id), viewport=$('viewport');
 let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,keys={},last=0,goalPause=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),FIELD_X=48,FIELD_Z=30;
