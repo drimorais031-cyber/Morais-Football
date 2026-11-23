@@ -80,9 +80,11 @@ function kick(type){
  const len=Math.hypot(dx,dz)||1;ball.userData.vx=dx/len*(type==='shoot'?19:12);ball.userData.vz=dz/len*(type==='shoot'?19:12);$('status').textContent=type==='shoot'?'CHUTE! ⚽':'Passe!';
 }
 function start(){
+ try {
  if(!renderer)buildPitch();if(ball)scene.remove(ball);players.forEach(p=>scene.remove(p.group));score=[0,0];seconds=0;
  $('homeLabel').textContent=$('homeTeam').value.toUpperCase();$('awayLabel').textContent=$('awayTeam').value.toUpperCase();$('homeScore').textContent='0';$('awayScore').textContent='0';
- setup();$('menu').classList.add('hidden');$('game').classList.remove('hidden');$('loading').style.display='none';running=true;paused=false;$('status').textContent='Partida em andamento';$('pauseBtn').textContent='PAUSAR';last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);resize();
+ setup();$('menu').classList.add('hidden');$('game').classList.remove('hidden');$('loading').style.display='none';running=true;paused=false;$('status').textContent='Partida em andamento';$('pauseBtn').textContent='PAUSAR';last=performance.now();cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(loop);
+ } catch(error) { console.error('Erro ao iniciar partida:',error); running=false; const msg=document.createElement('div');msg.style.cssText='padding:16px;margin:10px;color:#fff;background:#391b1b;border:1px solid #b84b4b;border-radius:10px;font:13px/1.5 Arial';msg.textContent='Não foi possível iniciar a partida 3D: '+error.message;$('loading').style.display='none';viewport.appendChild(msg); }
 }
 function resize(){if(!renderer)return;const w=viewport.clientWidth,h=viewport.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 function resetGoal(){players.forEach(p=>{p.x=p.homeX;p.z=p.homeZ;p.vx=p.vz=0;p.group.position.set(p.x,0,p.z)});ball.position.set(0,.36,0);ball.userData.vx=ball.userData.vz=0;goalPause=1.2}
@@ -93,7 +95,7 @@ function update(dt){
  const controlled=active;
  players.forEach(p=>{
   let tx=p.homeX,tz=p.homeZ;
-  if(p===controlled){tx=p.x+move.x;tz=p.z+move.z}
+  if(p===controlled){tx=p.x+move.x*100;tz=p.z+move.z*100}
   else if(p.index===0){tx=p.team===0?-22:22;tz=clamp(ball.position.z,-3.2,3.2);if(Math.abs(ball.position.x-tx)<8){tx=ball.position.x}}
   else{const ch=nearest(p.team);if(p===ch){tx=ball.position.x+(p.team===0?-1.1:1.1);tz=ball.position.z}else{tx=p.homeX+(ball.position.x)*(p.team===0?.12:-.12);tz=p.homeZ+ball.position.z*.1}}
   let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);let speed=p.speed*(p===controlled?(sprint?1.45:1):p===nearest(p.team)?1:.72);
