@@ -146,6 +146,11 @@
     });
     separatePlayers();
     players.forEach(p=>ballPlayerCollision(p,delta));
+    if(controlled&&dist(controlled,ball)<controlled.r+ball.r+9){
+      const lead=controlled.face*17;
+      ball.x=controlled.x+lead;ball.y=controlled.y+clamp((ball.y-controlled.y)*.35,-10,10);
+      ball.vx=controlled.vx*.82;ball.vy=controlled.vy*.82;ball.owner=controlled;
+    }else{ball.owner=null}
     ball.x+=ball.vx*delta;ball.y+=ball.vy*delta;
     const drag=Math.pow(.986,delta*60);
     ball.vx*=drag;ball.vy*=drag;ball.spin*=Math.pow(.94,delta*60);
