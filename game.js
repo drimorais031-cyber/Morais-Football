@@ -3,7 +3,7 @@
   const menu=$("menu"), game=$("game"), canvas=$("pitch"), ctx=canvas.getContext("2d");
   const W=900,H=560, GOAL_TOP=225, GOAL_BOTTOM=335;
   let players=[],ball,keys={},score=[0,0],seconds=0,running=false,paused=false,last=0,raf=0;
-  let move={x:0,y:0},activePlayer=null,matchEnded=false,kickoffTimer=0;
+  let move={x:0,y:0},activePlayer=null,matchEnded=false,kickoffTimer=0,sprinting=false;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const formations=[
     [{x:.08,y:.50},{x:.23,y:.18},{x:.23,y:.39},{x:.23,y:.61},{x:.23,y:.82},{x:.42,y:.17},{x:.42,y:.39},{x:.42,y:.61},{x:.42,y:.83},{x:.60,y:.36},{x:.60,y:.64}],
@@ -25,6 +25,9 @@
     $("clock").textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(Math.floor(seconds%60)).padStart(2,"0");
   }
   function start(){
+    if(window.matchMedia("(max-width: 700px)").matches && screen.orientation && screen.orientation.lock){
+      screen.orientation.lock("landscape").catch(()=>{});
+    }
     $("homeLabel").textContent=$("homeTeam").value.toUpperCase();$("awayLabel").textContent=$("awayTeam").value.toUpperCase();
     menu.classList.add("hidden");game.classList.remove("hidden");
     score=[0,0];seconds=0;matchEnded=false;setup();running=true;paused=false;
@@ -93,7 +96,7 @@
       let dx=move.x,dy=move.y;
       if(keys.ArrowLeft||keys.a||keys.A)dx=-1;if(keys.ArrowRight||keys.d||keys.D)dx=1;
       if(keys.ArrowUp||keys.w||keys.W)dy=-1;if(keys.ArrowDown||keys.s||keys.S)dy=1;
-      movePlayer(controlled,dx,dy,scale);
+      movePlayer(controlled,dx,dy,scale*(sprinting?1.65:1));
       if(dist(controlled,ball)<controlled.r+ball.r+7){
         ball.x=controlled.x+controlled.face*18;ball.y=controlled.y+clamp((ball.y-controlled.y)*.45,-12,12);
         ball.vx=controlled.face*1.1;ball.vy*=.6;
@@ -129,6 +132,10 @@
   function loop(t){if(!running)return;const dt=Math.min(40,t-last);last=t;if(!paused&&!matchEnded)update(dt);draw();raf=requestAnimationFrame(loop)}
   $("startBtn").addEventListener("click",start);
   $("passBtn").addEventListener("click",()=>action("pass"));$("shootBtn").addEventListener("click",()=>action("shoot"));
+  $("switchBtn").addEventListener("click",selectNearest);
+  const sprintBtn=$("sprintBtn");
+  sprintBtn.addEventListener("pointerdown",e=>{e.preventDefault();sprinting=true;sprintBtn.classList.add("pressed")});
+  ["pointerup","pointerleave","pointercancel","lostpointercapture"].forEach(ev=>sprintBtn.addEventListener(ev,()=>{sprinting=false;sprintBtn.classList.remove("pressed")}));
   $("pauseBtn").addEventListener("click",()=>{if(matchEnded)return;paused=!paused;$("pauseBtn").textContent=paused?"CONTINUAR":"PAUSAR";$("status").textContent=paused?"Partida pausada":"Partida em andamento"});
   $("backBtn").addEventListener("click",()=>{running=false;cancelAnimationFrame(raf);game.classList.add("hidden");menu.classList.remove("hidden")});
   window.addEventListener("keydown",e=>{keys[e.key]=true;if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();if(e.key===" "){action("shoot")}if(e.key==="x"||e.key==="X")action("pass")});
