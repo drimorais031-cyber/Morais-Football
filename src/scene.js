@@ -153,7 +153,7 @@ function makePlayer(id,team,role,x,z,players,scene){
   group.position.set(x,0,z);scene.add(group);
   const ring=new THREE.Mesh(new THREE.RingGeometry(.78,.96,36),new THREE.MeshBasicMaterial({color:0xffe45b,side:THREE.DoubleSide,transparent:true,opacity:.9}));
   ring.rotation.x=-Math.PI/2;ring.position.y=.065;ring.visible=false;group.add(ring);
-  const p={id,team,role,mesh:group,ring,legs,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7};
+  const p={id,team,role,mesh:group,ring,legs,kit:shirt,shorts,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7};
   players.push(p);
 }
 export function createScene(){
@@ -180,6 +180,7 @@ export function createScene(){
   [[28,-15],[28,0],[28,15],[12,-8],[12,8]].forEach((p,i)=>makePlayer(i+5,1,i===0?"GK":"FIELD",...p,players,scene));
   return{
     scene,camera,renderer,ball,players,
+    setTeamColors(home,away){for(const p of players){const t=p.team===0?home:away;p.kit.color.setHex(t.shirt);p.shorts.material.color.setHex(t.shorts);}},
     resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)},
     follow(p,dt){
       const target=new THREE.Vector3(p.x*.28,45.5,18+p.z*.48);
