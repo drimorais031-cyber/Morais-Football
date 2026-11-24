@@ -9,7 +9,7 @@ Jogo de futebol 3D arcade/simulação leve para navegador, em JavaScript ES Modu
 - `src/ai.js`: movimentação tática simples e goleiros.
 - `src/match.js`: relógio, placar, gol e reinício.
 
-A bola usa gravidade, amortecimento no ar, atrito no gramado e colisão simplificada com jogadores e limites do campo. A câmera acompanha a bola com interpolação exponencial. A IA calcula alvos táticos e aplica aceleração amortecida para manter a execução leve.
+A bola usa gravidade, amortecimento no ar, atrito no gramado, quique e colisão com jogadores, goleiros, postes e travessão. A câmera acompanha a bola com interpolação exponencial. A IA calcula alvos táticos e aplica aceleração amortecida. Os passes consideram distância, direção do controle e pressão adversária; o chute usa carga e mira direcional. Os jogadores têm animação procedural simples das pernas.
 
 ## Executar localmente
 Os módulos ES precisam de servidor HTTP. Na pasta do projeto:
