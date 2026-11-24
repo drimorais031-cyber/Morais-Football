@@ -99,23 +99,23 @@ function kick(type){
  const d=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
  if(d>2.5){$('status').textContent='Aproxime-se da bola';return}
  let dx=active.team===0?1:-1,dz=clamp(-ball.position.z*.12,-1.2,1.2);
- if(type==='pass'){
+ if(type==='pass'||type==='through'){
   const mates=players.filter(p=>p.team===0&&p!==active&&p.index!==0);
   const mate=mates.sort((a,b)=>{
-   const score=p=>Math.hypot(p.x-active.x,p.z-active.z)-Math.max(0,(p.x-active.x))*0.65;
+   const score=p=>Math.hypot(p.x-active.x,p.z-active.z)-Math.max(0,(p.x-active.x))*(type==='through'?.95:.65);
    return score(a)-score(b);
   })[0];
-  if(mate){dx=mate.x-ball.position.x;dz=mate.z-ball.position.z}
+  if(mate){dx=mate.x-ball.position.x+(type==='through'?4:0);dz=mate.z-ball.position.z}
  }else{
   const keeper=players.find(p=>p.team===1&&p.index===0);
   const targetZ=clamp(ball.position.z*.28-(keeper?keeper.z*.22:0),-2.7,2.7);
   dz=targetZ-ball.position.z;
  }
  const len=Math.hypot(dx,dz)||1;
- const power=type==='shoot'?22:13;
+ const power=type==='shoot'?22:type==='through'?17:13;
  ball.userData.vx=dx/len*power;ball.userData.vz=dz/len*power;
- ball.userData.vy=type==='shoot'?4.6:1.0;
- $('status').textContent=type==='shoot'?'CHUTE DIRECIONADO! ⚽':'PASSE PARA FRENTE!';
+ ball.userData.vy=type==='shoot'?4.6:type==='through'?1.8:1.0;
+ $('status').textContent=type==='shoot'?'CHUTE DIRECIONADO! ⚽':type==='through'?'LANÇAMENTO EM PROFUNDIDADE!':'PASSE PARA FRENTE!';
 }
 function start(){
  try {
