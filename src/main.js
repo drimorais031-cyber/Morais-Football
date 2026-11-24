@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-7";
-import { BallPhysics } from "./physics.js?v=mf-v1-7";
-import { Controls } from "./controls.js?v=mf-v1-7";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-7";
-import { Match } from "./match.js?v=mf-v1-7";
+import { createScene } from "./scene.js?v=mf-v1-8";
+import { BallPhysics } from "./physics.js?v=mf-v1-8";
+import { Controls } from "./controls.js?v=mf-v1-8";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-8";
+import { Match } from "./match.js?v=mf-v1-8";
 
 const $=s=>document.querySelector(s);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
@@ -36,7 +36,7 @@ function shoot(player,power,aim){
   if(aimLen>.2){goal.z+=(aim.z/aimLen)*8;goal.x+=(aim.x/aimLen)*2.5}
   const len=Math.hypot(goal.x,goal.z)||1,dir={x:goal.x/len,z:goal.z/len};
   ball.reset(player.mesh.position.x+dir.x*1.8,player.mesh.position.z+dir.z*1.8);
-  ball.kick(dir,power,1.4+power*.17,player.id);
+  ball.kick(dir,power,1.8+power*.075,player.id);
   ballReleaseTimer=0.85;
   say(power>20?"CHUTE POTENTE!":"CHUTE!");
 }
@@ -87,7 +87,7 @@ function loop(){
     if(shotPlayer===controlled)charge=Math.min(100,charge+(input.shoot?82*dt:18));
   }
   if(input.shootReleased&&charge>0&&shotPlayer){
-    shoot(shotPlayer,THREE.MathUtils.clamp(11+charge*.19,11,30),input);
+    shoot(shotPlayer,THREE.MathUtils.clamp(14+charge*.32,14,46),input);
     charge=0;shotPlayer=null;
   } else if(input.shootTap&&!input.shoot&&hasBall){
     shoot(controlled,14,input);
