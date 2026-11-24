@@ -166,3 +166,35 @@ button{border:0;border-radius:9px;font-weight:900;letter-spacing:.7px;cursor:poi
 .actions button:focus-visible,.secondary:focus-visible{outline:3px solid #fff;outline-offset:2px}
 #status{max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (orientation:landscape) and (max-height:520px){.mobile-controls{bottom:27px}.joystick{width:clamp(108px,19vh,138px);height:clamp(108px,19vh,138px)}.actions{grid-template-columns:repeat(2,clamp(56px,10vh,72px));grid-template-rows:repeat(3,clamp(42px,7.4vh,54px));gap:5px}.actions button{font-size:clamp(7px,1.2vh,9px)}}
+
+/* Campo em tela cheia: HUD e comandos ficam sobre o gramado, sem roubar área útil. */
+#game:not(.hidden){position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;padding:0!important;display:block!important;background:#07110b!important;overflow:hidden!important}
+#game:not(.hidden) .viewport{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;border:0!important;border-radius:0!important;overflow:hidden!important}
+#game:not(.hidden) .viewport canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+#game:not(.hidden) .scorebar{position:absolute;z-index:35;top:max(5px,env(safe-area-inset-top));left:12px;right:12px;margin:0;padding:5px 12px;border-radius:12px;background:#06110bbd;backdrop-filter:blur(5px);text-shadow:0 2px 4px #000}
+#game:not(.hidden) .game-footer{position:fixed;z-index:36;left:10px;right:10px;bottom:max(5px,env(safe-area-inset-bottom));pointer-events:none}
+#game:not(.hidden) .game-footer>*{pointer-events:auto}
+#game:not(.hidden) .game-footer span{padding:5px 9px;border-radius:8px;background:#06110bbd;max-width:45vw}
+#game:not(.hidden) .mobile-controls{position:fixed;inset:0;bottom:auto;z-index:32;padding:0;pointer-events:none}
+#game:not(.hidden) .left-controls{position:absolute;left:clamp(12px,3vw,42px);bottom:clamp(34px,6vh,65px)}
+#game:not(.hidden) .actions{position:absolute;right:clamp(12px,3vw,42px);bottom:clamp(34px,6vh,65px)}
+.control-settings-trigger{position:fixed;z-index:40;right:12px;top:max(42px,env(safe-area-inset-top));padding:8px 11px;border:1px solid #ffffff77;border-radius:20px;background:#071b2cdd;color:#fff;font-size:10px;box-shadow:0 3px 12px #0008}
+.control-settings{position:fixed;z-index:60;inset:0;display:grid;place-items:center;padding:18px;background:#0009;backdrop-filter:blur(5px)}
+.control-settings-card{width:min(440px,94vw);padding:20px;border:1px solid #8da8d8;border-radius:16px;background:linear-gradient(145deg,#101f53,#07142c);box-shadow:0 18px 50px #000b;color:#fff}
+.control-settings-card h2{margin:0 0 10px;color:#ffe500;font-size:18px}
+.control-settings-card p{font-size:13px;line-height:1.5;color:#e2eaff}
+.control-settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+.control-settings-actions button{min-height:42px;padding:9px;background:#e5edff;color:#12224b;font-size:10px}
+.control-settings-actions button:first-child{background:#ffe500;color:#151b55}
+.control-settings-actions button:last-child{grid-column:1/-1;background:#263c61;color:#fff}
+#game.editing-controls .mobile-controls{pointer-events:auto!important}
+#game.editing-controls .mobile-controls .joystick,
+#game.editing-controls .mobile-controls .actions button{outline:3px dashed #ffe500;outline-offset:3px;filter:brightness(1.12);cursor:grab}
+#game.editing-controls .mobile-controls .actions button{pointer-events:auto}
+@media (orientation:portrait){
+ #game:not(.hidden) .scorebar{font-size:9px;gap:5px}
+ #game:not(.hidden) .scorebar strong{font-size:20px;gap:5px}
+ #game:not(.hidden) .joystick{width:clamp(94px,19vw,130px);height:clamp(94px,19vw,130px)}
+ #game:not(.hidden) .actions{grid-template-columns:repeat(2,clamp(48px,10vw,64px));grid-template-rows:repeat(3,clamp(42px,8vw,54px));gap:5px}
+ #game:not(.hidden) .actions button{font-size:8px}
+}
