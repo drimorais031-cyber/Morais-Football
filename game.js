@@ -479,13 +479,32 @@ const controlSettings=$('controlSettings'),editControlsBtn=$('editControlsBtn'),
 let controlsEditMode=false,dragControl=null;
 const movableControls=[['joystick', 'joystick'],['passBtn','action'],['shootBtn','action'],['switchBtn','action'],['sprintBtn','action'],['slideBtn','action'],['throughBtn','action']];
 function controlElements(){return movableControls.map(([id])=>$(id)).filter(Boolean)}
+let selectedControlId='passBtn';
+function getControlData(){let data={};try{data=JSON.parse(localStorage.getItem('moraisFootballControls')||'{}')}catch(e){}return data}
 function saveControlPositions(){
- const data={};controlElements().forEach(el=>{if(el.dataset.customPosition==='1'){const r=el.getBoundingClientRect();data[el.id]={x:r.left/innerWidth,y:r.top/innerHeight}}});
+ const data=getControlData();
+ controlElements().forEach(el=>{
+  const item=data[el.id]||{};
+  if(el.dataset.customPosition==='1'){const r=el.getBoundingClientRect();item.x=r.left/innerWidth;item.y=r.top/innerHeight}
+  const scale=Number(el.dataset.controlScale||1);if(scale!==1)item.scale=scale;else delete item.scale;
+  if(Object.keys(item).length)data[el.id]=item;
+ });
  try{localStorage.setItem('moraisFootballControls',JSON.stringify(data))}catch(e){}
 }
 function applyControlPositions(){
- let data={};try{data=JSON.parse(localStorage.getItem('moraisFootballControls')||'{}')}catch(e){}
- Object.entries(data).forEach(([id,p])=>{const el=$(id);if(!el||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;el.style.position='fixed';el.style.left=(p.x*innerWidth)+'px';el.style.top=(p.y*innerHeight)+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1'});
+ const data=getControlData();
+ Object.entries(data).forEach(([id,p])=>{
+  const el=$(id);if(!el)return;
+  if(Number.isFinite(p.x)&&Number.isFinite(p.y)){el.style.position='fixed';el.style.left=(p.x*innerWidth)+'px';el.style.top=(p.y*innerHeight)+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1'}
+  if(Number.isFinite(p.scale)){el.dataset.controlScale=String(clamp(p.scale,.6,1.8));el.style.setProperty('--control-scale',el.dataset.controlScale)}
+ });
+}
+function resizeSelectedControl(delta){
+ const el=$(selectedControlId);if(!el)return;
+ const current=Number(el.dataset.controlScale||1),next=clamp(Math.round((current+delta)*10)/10,.6,1.8);
+ el.dataset.controlScale=String(next);el.style.setProperty('--control-scale',String(next));
+ $('selectedControlSize').textContent=Math.round(next*100)+'%';
+ saveControlPositions();
 }
 function setControlsEditMode(enabled){
  controlsEditMode=enabled;
@@ -510,7 +529,10 @@ editControlsBtn.addEventListener('click',()=>{
   openControlSettings.textContent='⚙ CONTROLES';
  }
 });
-resetControlsBtn.addEventListener('click',()=>{try{localStorage.removeItem('moraisFootballControls')}catch(e){}controlElements().forEach(el=>{el.style.position='';el.style.left='';el.style.top='';el.style.right='';el.style.bottom='';el.style.margin='';delete el.dataset.customPosition});setControlsEditMode(false)});
+$('controlSizeSelect').addEventListener('change',e=>{selectedControlId=e.target.value;const el=$(selectedControlId);const scale=Number(el?.dataset.controlScale||1);$('selectedControlSize').textContent=Math.round(scale*100)+'%'});
+$('shrinkControlBtn').addEventListener('click',()=>resizeSelectedControl(-.1));
+$('growControlBtn').addEventListener('click',()=>resizeSelectedControl(.1));
+resetControlsBtn.addEventListener('click',()=>{try{localStorage.removeItem('moraisFootballControls')}catch(e){}controlElements().forEach(el=>{el.style.position='';el.style.left='';el.style.top='';el.style.right='';el.style.bottom='';el.style.margin='';el.style.removeProperty('--control-scale');delete el.dataset.customPosition;delete el.dataset.controlScale});setControlsEditMode(false);$('selectedControlSize').textContent='100%'});
 controlElements().forEach(el=>{
  el.addEventListener('pointerdown',e=>{
   if(!controlsEditMode)return;
