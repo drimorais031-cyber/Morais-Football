@@ -8,7 +8,7 @@ import { Match } from "./match.js?v=mf-v1-5";
 const $=s=>document.querySelector(s);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
 const home=world.players.filter(p=>p.team===0);
-let active=3,charge=0,lastSwitch=0,shotPlayer=null;
+let active=3,charge=0,lastSwitch=0,shotPlayer=null,ballReleaseTimer=0;
 const say=message=>{const n=$("#notice");n.textContent=message;clearTimeout(say.timer);say.timer=setTimeout(()=>n.textContent="",1400)};
 const match=new Match(score=>{$("#homeScore").textContent=score.home;$("#awayScore").textContent=score.away;$("#clock").textContent=match.format()},say);
 function select(player){if(!player)return;active=player.id;world.players.forEach(p=>p.ring.visible=p.id===active)}
@@ -29,7 +29,7 @@ function pass(player,longPass,aim){
   const receiver=chooseReceiver(player,longPass,aim);if(!receiver)return;
   const dx=receiver.mesh.position.x-player.mesh.position.x,dz=receiver.mesh.position.z-player.mesh.position.z,len=Math.hypot(dx,dz)||1;
   const direction={x:dx/len,z:dz/len},power=longPass?THREE.MathUtils.clamp(12+len*.22,14,23):THREE.MathUtils.clamp(7.5+len*.22,8.5,15);
-  ball.reset(player.mesh.position.x+direction.x*1.8,player.mesh.position.z+direction.z*1.8);ball.kick(direction,power,longPass?3.2:.35,player.id);select(receiver);say(longPass?"LANÇAMENTO!":"PASSE!");
+  ball.reset(player.mesh.position.x+direction.x*1.8,player.mesh.position.z+direction.z*1.8);ball.kick(direction,power,longPass?3.2:.35,player.id);ballReleaseTimer=longPass?0.9:0.7;select(receiver);say(longPass?"LANÇAMENTO!":"PASSE!");
 }
 function shoot(player,power,aim){
   const goal={x:50-player.mesh.position.x,z:-player.mesh.position.z},aimLen=Math.hypot(aim.x,aim.z);
@@ -71,14 +71,14 @@ function resetKickoff(){
 function loop(){
   requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.033);
   if(!match.running||match.paused){world.render();return}
-  match.update(dt);const input=controls.read();let controlled=world.players[active];
+  match.update(dt);ballReleaseTimer=Math.max(0,ballReleaseTimer-dt);const input=controls.read();let controlled=world.players[active];
   if(input.switch&&performance.now()-lastSwitch>220){select(nearestTeammate());lastSwitch=performance.now();controlled=world.players[active]}
   const possession=teamHasPossession();
   if(!possession){const closest=nearestTeammate();if(closest&&distance2(closest.mesh.position,ball.mesh.position)+1.25<distance2(controlled.mesh.position,ball.mesh.position)){select(closest);controlled=world.players[active]}}
   updateAI(world.players,ball.mesh.position,dt,active,possession);updateGoalkeepers(world.players,ball.mesh.position,dt);
   for(const p of world.players)movePlayer(p,dt,input,p.id===active);
   let ballDistance=distance2(controlled.mesh.position,ball.mesh.position);
-  const hasBall=ballDistance<2.65&&ball.mesh.position.y<1.65;
+  const hasBall=ballReleaseTimer<=0&&ballDistance<2.65&&ball.mesh.position.y<1.65;
   if(hasBall&&!input.shoot&&!input.shootTap)controlBall(controlled,input,dt);
   // Entradas de toque são armazenadas pelos eventos: um toque rápido não se perde entre frames.
   if((input.shoot||input.shootTap)&&hasBall){
@@ -102,6 +102,6 @@ function loop(){
   world.follow(ball.mesh.position,dt);world.render();
 }
 $("#play").onclick=()=>{
-  match.start();charge=0;shotPlayer=null;resetKickoff();$("#start").style.display="none";say("BOLA ROLANDO!");
+  match.start();charge=0;shotPlayer=null;ballReleaseTimer=0;resetKickoff();$("#start").style.display="none";say("BOLA ROLANDO!");
 };
 addEventListener("resize",()=>world.resize());world.resize();loop();
