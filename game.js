@@ -18,7 +18,7 @@ try {
   return;
 }
 const $=id=>document.getElementById(id), viewport=$('viewport');
-let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,slideTimer=0,keys={},last=0,goalPause=0,possessionTeam=null,possessionCandidate=null,possessionCandidateTime=0;
+let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,slideTimer=0,keys={},last=0,goalPause=0,possessionTeam=null,possessionCandidate=null,possessionCandidateTime=0,lastKick=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),FIELD_X=48,FIELD_Z=30;
 const formations=[[-21,0],[-14,-10],[-14,-3],[-14,4],[-14,10],[-6,-11],[-6,-4],[-6,4],[-6,11],[1,-5],[1,5]];
 function mat(color,roughness=.8){return new THREE.MeshStandardMaterial({color,roughness})}
@@ -157,8 +157,11 @@ function selectPlayer(){
 }
 function kick(type){
  if(!running||paused||goalPause>0||!active)return;
+ const now=performance.now();if(now-lastKick<260)return;
  const d=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
- if(d>2.5){$('status').textContent='Aproxime-se da bola';return}
+ if(d>3.15){$('status').textContent='Chegue mais perto da bola para jogar';return}
+ lastKick=now;
+ // Pequena assistência de contato evita que o botão falhe quando a bola está junto ao pé.
  let dx=active.team===0?1:-1,dz=clamp(-ball.position.z*.12,-1.2,1.2),receiver=null;
  if(type==='pass'||type==='through'){
   const mates=players.filter(p=>p.team===0&&p!==active&&p.index!==0);
@@ -173,9 +176,12 @@ function kick(type){
   dz=targetZ-ball.position.z;
  }
  const len=Math.hypot(dx,dz)||1;
- const power=type==='shoot'?22:type==='through'?17:13;
+ const power=type==='shoot'?25:type==='through'?17.5:14.5;
+ ball.position.x=active.x+Math.sin(active.group.rotation.y)*.78;
+ ball.position.z=active.z+Math.cos(active.group.rotation.y)*.78;
+ ball.position.y=.38;
  ball.userData.vx=dx/len*power;ball.userData.vz=dz/len*power;
- ball.userData.vy=type==='shoot'?4.6:type==='through'?1.8:1.0;
+ ball.userData.vy=type==='shoot'?4.1:type==='through'?1.35:.55;
  // Após passe ou lançamento, o controle muda para o companheiro escolhido para receber.
  if(receiver){
   if(active)active.ring.visible=false;
@@ -259,8 +265,8 @@ function update(dt){
     if(Math.abs(ball.position.x-p.x)<7)tx+=attackDir*1.4;
    }
   }
-  let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);let speed=p.speed*(p===controlled?(slideTimer>0?2.0:(sprint?1.45:1)):p===nearest(p.team)?1:.72);
-  if(len>0.08){p.vx+=(dx/len*speed-p.vx)*Math.min(1,dt*7);p.vz+=(dz/len*speed-p.vz)*Math.min(1,dt*7)}else{p.vx*=Math.max(0,1-dt*9);p.vz*=Math.max(0,1-dt*9)}
+  let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);let speed=p===controlled?(slideTimer>0?11.5:(sprint?9.6:7.8)):p.speed*(p===nearest(p.team)?1:.72);
+  if(len>0.08){const desiredX=dx/len*speed,desiredZ=dz/len*speed,blend=Math.min(1,dt*(p===controlled?13:7));p.vx+=(desiredX-p.vx)*blend;p.vz+=(desiredZ-p.vz)*blend}else{const drag=Math.max(0,1-dt*(p===controlled?12:9));p.vx*=drag;p.vz*=drag}
   p.x=clamp(p.x+p.vx*dt,-23,23);p.z=clamp(p.z+p.vz*dt,-14,14);p.group.position.set(p.x,0,p.z);
   const velocity=Math.hypot(p.vx,p.vz);
   if(p===controlled&&Math.hypot(move.x,move.z)>.08)p.group.rotation.y=Math.atan2(move.x,move.z);
@@ -278,19 +284,19 @@ function update(dt){
  const controlDistance=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
  const ballSpeed=Math.hypot(vx,vz);
  const hasInput=Math.hypot(move.x,move.z)>.08;
- if(controlDistance<1.75&&ballSpeed<11&&ball.position.y<1.1){
+ if(controlDistance<2.0&&ballSpeed<12.5&&ball.position.y<1.2){
   if(hasInput)active.group.rotation.y=Math.atan2(move.x,move.z);
   const facing=active.group.rotation.y;
-  const targetX=active.x+Math.sin(facing)*.82;
-  const targetZ=active.z+Math.cos(facing)*.82;
-  const follow=Math.min(1,dt*(hasInput?19:14));
+  const targetX=active.x+Math.sin(facing)*(hasInput?.88:.7);
+  const targetZ=active.z+Math.cos(facing)*(hasInput?.88:.7);
+  const follow=Math.min(1,dt*(hasInput?22:17));
   ball.position.x+=(targetX-ball.position.x)*follow;
   ball.position.z+=(targetZ-ball.position.z)*follow;
   vx=active.vx*.98;vz=active.vz*.98;vy=0;
  }
  // Colisão física com os demais atletas. O jogador controlado não chuta a bola para longe ao dominá-la.
  for(const p of players){
-  if(p===active&&controlDistance<1.75&&ballSpeed<11)continue;
+  if(p===active&&controlDistance<2.0&&ballSpeed<12.5)continue;
   const dx=ball.position.x-p.x,dz=ball.position.z-p.z,dist=Math.hypot(dx,dz);
   if(dist>.001&&dist<.66&&ball.position.y<1.15){
    const nx=dx/dist,nz=dz/dist;
