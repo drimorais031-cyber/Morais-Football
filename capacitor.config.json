@@ -1,0 +1,9 @@
+{
+  "appId": "com.moraisfootball.game",
+  "appName": "Morais Football",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
