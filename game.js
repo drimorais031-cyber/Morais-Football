@@ -100,12 +100,18 @@ function setup(){
 }
 function nearest(team){return players.filter(p=>p.team===team&&p.index!==0).sort((a,b)=>Math.hypot(a.x-ball.position.x,a.z-ball.position.z)-Math.hypot(b.x-ball.position.x,b.z-ball.position.z))[0]}
 function selectPlayer(){
- const candidates=players.filter(p=>p.team===0&&p.index!==0)
-  .sort((a,b)=>Math.hypot(a.x-ball.position.x,a.z-ball.position.z)-Math.hypot(b.x-ball.position.x,b.z-ball.position.z));
- const current=candidates.indexOf(active);
- const p=candidates[(current+1)%candidates.length]||candidates[0];
- if(active)active.ring.visible=false;active=p;if(active)active.ring.visible=true;
- $('status').textContent='Controlando jogador '+(active.index+1);
+ if(!ball||!players.length)return;
+ const candidates=players.filter(p=>p.team===0&&p.index!==0);
+ candidates.sort((a,b)=>{
+  const da=Math.hypot(a.x-ball.position.x,a.z-ball.position.z);
+  const db=Math.hypot(b.x-ball.position.x,b.z-ball.position.z);
+  return da-db;
+ });
+ const p=candidates[0];
+ if(!p)return;
+ if(active)active.ring.visible=false;
+ active=p;active.ring.visible=true;
+ $('status').textContent='Jogador mais próximo da bola selecionado';
 }
 function kick(type){
  if(!running||paused||goalPause>0||!active)return;
@@ -247,16 +253,6 @@ function loop(t){
  }
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
 }
-const info=$('menuInfoPanel'),quick=document.querySelector('.match-panel'),tabs=[...document.querySelectorAll('[data-tab]')],modes=[...document.querySelectorAll('[data-mode]')];
-function menuPage(page){
- if(page==='match'){info.classList.add('hidden');quick.classList.remove('hidden');return}
- quick.classList.add('hidden');info.classList.remove('hidden');
- const pages={club:'<h2>MEU CLUBE · MORAIS FC</h2><p>Equipe: Morais FC</p><p>Formação: 4-3-3</p><p>Estádio: Morais Arena</p>',extras:'<h2>EXTRAS</h2><p>Analógico: movimenta o jogador.</p><p>PASSE: toca a bola. CHUTE: finaliza. SPRINT: corre. SWITCH: troca o jogador. SLIDE: tenta desarmar.</p>',challenge:'<h2>DESAFIO</h2><p>Treinos de passe, domínio e finalização. Os desafios completos serão adicionados em atualização futura.</p>',tactics:'<h2>PLANO DE JOGO</h2><p>Formação: 4-3-3</p><p>Estilo: posse de bola e ataque pelas laterais.</p>',market:'<h2>ELENCO E CONTRATOS</h2><p>Seu elenco inicial é o Morais FC. A gestão de contratações será ampliada em atualização futura.</p>'};
- info.innerHTML=(pages[page]||pages.extras)+'<button type="button" id="menuReturn">VOLTAR</button>';
- $('menuReturn').addEventListener('click',()=>{tabs.forEach(t=>t.classList.toggle('active',t.dataset.tab==='game'));menuPage('match')});
-}
-tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>x.classList.toggle('active',x===t));menuPage(t.dataset.tab==='game'?'match':t.dataset.tab)}));
-modes.forEach(m=>m.addEventListener('click',()=>{modes.forEach(x=>x.classList.toggle('selected',x===m));menuPage(m.dataset.mode)}));
 $('startBtn').addEventListener('click',start);$('slideBtn').addEventListener('click',slideTackle);$('passBtn').addEventListener('click',()=>kick('pass'));$('shootBtn').addEventListener('click',()=>kick('shoot'));$('throughBtn').addEventListener('click',()=>kick('through'));$('switchBtn').addEventListener('click',selectPlayer);
 $('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'CONTINUAR':'PAUSAR';$('status').textContent=paused?'Partida pausada':'Partida em andamento'});
 $('backBtn').addEventListener('click',()=>{running=false;cancelAnimationFrame(raf);$('game').classList.add('hidden');$('menu').classList.remove('hidden')});
