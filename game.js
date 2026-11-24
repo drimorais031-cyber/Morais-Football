@@ -18,7 +18,7 @@ try {
   return;
 }
 const $=id=>document.getElementById(id), viewport=$('viewport');
-let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,slideTimer=0,keys={},last=0,goalPause=0,possessionTeam=null,possessionCandidate=null,possessionCandidateTime=0,lastKick=0;
+let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,slideTimer=0,keys={},last=0,goalPause=0,possessionTeam=null,possessionCandidate=null,possessionCandidateTime=0,lastKick=0,aiDecisionTimer=0,aiCarrier=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),FIELD_X=48,FIELD_Z=30;
 const formations=[[-21,0],[-14,-10],[-14,-3],[-14,4],[-14,10],[-6,-11],[-6,-4],[-6,4],[-6,11],[1,-5],[1,5]];
 function mat(color,roughness=.8){return new THREE.MeshStandardMaterial({color,roughness})}
@@ -446,7 +446,37 @@ function update(dt){
  // Keep player bodies from occupying the same point.
  for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){const a=players[i],b=players[j],dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz);if(d>0&&d<.8){const push=(.8-d)*.5;a.x-=dx/d*push;a.z-=dz/d*push;b.x+=dx/d*push;b.z+=dz/d*push;a.group.position.set(a.x,0,a.z);b.group.position.set(b.x,0,b.z)}}
  let vx=ball.userData.vx||0,vz=ball.userData.vz||0,vy=ball.userData.vy||0;
- // Domínio assistido: a bola acompanha o pé do atleta quando ele chega perto.
+ // Inteligência da equipe adversária: conduz, procura companheiro e finaliza quando chega perto da área.
+ const rivalCarrier=firstChaser[1];
+ const rivalDistance=rivalCarrier?Math.hypot(rivalCarrier.x-ball.position.x,rivalCarrier.z-ball.position.z):Infinity;
+ if(teamInPossession===1&&rivalCarrier&&rivalDistance<1.45&&ball.position.y<1.15&&Math.hypot(vx,vz)<7.2){
+  if(aiCarrier!==rivalCarrier){aiCarrier=rivalCarrier;aiDecisionTimer=0}
+  aiDecisionTimer+=dt;
+  const rivalFacing=Math.PI; // Equipe visitante ataca em direção ao gol de X negativo.
+  ball.position.set(rivalCarrier.x+Math.sin(rivalFacing)*.82,.4,rivalCarrier.z);
+  vx=rivalCarrier.vx*.52;vz=rivalCarrier.vz*.52;vy=0;
+  const distanceToGoal=Math.hypot(-24-rivalCarrier.x,rivalCarrier.z);
+  if(aiDecisionTimer>1.05){
+   const options=players.filter(p=>p.team===1&&p!==rivalCarrier&&p.index!==0);
+   const receiver=options.sort((a,b)=>{
+    const score=p=>((rivalCarrier.x-p.x)*.9)-Math.abs(p.z-rivalCarrier.z)*.22+Math.min(5,Math.hypot(p.x-ball.position.x,p.z-ball.position.z)*.08);
+    return score(b)-score(a);
+   })[0];
+   if(distanceToGoal<12.5){
+    const targetZ=clamp((rivalCarrier.z*.22),-2.5,2.5),dx=-24-ball.position.x,dz=targetZ-ball.position.z,len=Math.hypot(dx,dz)||1;
+    vx=dx/len*24+rivalCarrier.vx*.18;vz=dz/len*24+rivalCarrier.vz*.18;vy=3.5;
+    $('status').textContent='FINALIZAÇÃO DO ADVERSÁRIO! 🥅';
+   }else if(receiver){
+    const dx=receiver.x-ball.position.x-1.3,dz=receiver.z-ball.position.z,len=Math.hypot(dx,dz)||1;
+    const power=clamp(len*1.15,13,20);
+    vx=dx/len*power+rivalCarrier.vx*.15;vz=dz/len*power+rivalCarrier.vz*.15;vy=.9;
+    $('status').textContent='O adversário trabalhou a jogada e fez o passe.';
+   }else{vx=-15;vz=0;vy=.8}
+   ball.userData.vx=vx;ball.userData.vz=vz;ball.userData.vy=vy;
+   possessionTeam=null;aiCarrier=null;aiDecisionTimer=0;
+  }
+ }else if(teamInPossession!==1||rivalDistance>2.2){aiCarrier=null;aiDecisionTimer=0}
+ // Domínio assistido: a bola acompanha o pé do atleta quando ele chega perto. a bola acompanha o pé do atleta quando ele chega perto.
  const controlDistance=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
  const ballSpeed=Math.hypot(vx,vz);
  const hasInput=Math.hypot(move.x,move.z)>.08;
