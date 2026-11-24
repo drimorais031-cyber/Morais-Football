@@ -18,7 +18,7 @@ try {
   return;
 }
 const $=id=>document.getElementById(id), viewport=$('viewport');
-let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,keys={},last=0,goalPause=0;
+let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,slideTimer=0,keys={},last=0,goalPause=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),FIELD_X=48,FIELD_Z=30;
 const formations=[[-21,0],[-14,-10],[-14,-3],[-14,4],[-14,10],[-6,-11],[-6,-4],[-6,4],[-6,11],[1,-5],[1,5]];
 function mat(color,roughness=.8){return new THREE.MeshStandardMaterial({color,roughness})}
@@ -135,7 +135,7 @@ function slideTackle(){
  const opponent=players.filter(p=>p.team===1&&p.index!==0).sort((a,b)=>Math.hypot(a.x-active.x,a.z-active.z)-Math.hypot(b.x-active.x,b.z-active.z))[0];
  if(!opponent)return;
  const dx=opponent.x-active.x,dz=opponent.z-active.z,d=Math.hypot(dx,dz)||1;
- active.vx=dx/d*active.speed*2.1;active.vz=dz/d*active.speed*2.1;
+ slideTimer=.42;active.vx=dx/d*active.speed*2.1;active.vz=dz/d*active.speed*2.1;
  if(d<3.2){
   ball.userData.vx=dx/d*10;ball.userData.vz=dz/d*10;ball.userData.vy=.7;
   $('status').textContent='DESARME! BOA ROUBADA DE BOLA';
@@ -156,10 +156,11 @@ function update(dt){
  seconds+=dt;if(seconds>=180){seconds=180;$('status').textContent='FIM DE JOGO';paused=true}
  $('clock').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(Math.floor(seconds%60)).padStart(2,'0');
  if(goalPause>0){goalPause-=dt;return}
+ if(slideTimer>0)slideTimer=Math.max(0,slideTimer-dt);
  const controlled=active;
  players.forEach(p=>{
   let tx=p.homeX,tz=p.homeZ;
-  if(p===controlled){tx=p.x+move.x*100;tz=p.z+move.z*100}
+  if(p===controlled){if(slideTimer>0){const rival=players.filter(q=>q.team===1&&q.index!==0).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];if(rival){tx=rival.x;tz=rival.z}}else{tx=p.x+move.x*100;tz=p.z+move.z*100}}
   else if(p.index===0){
    const goalX=p.team===0?-22.2:22.2;
    const danger=p.team===0?ball.position.x< -12:ball.position.x>12;
@@ -177,7 +178,7 @@ function update(dt){
     if(Math.abs(ball.position.x-p.x)<7)tx+=attackDir*1.4;
    }
   }
-  let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);let speed=p.speed*(p===controlled?(sprint?1.45:1):p===nearest(p.team)?1:.72);
+  let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);let speed=p.speed*(p===controlled?(slideTimer>0?2.0:(sprint?1.45:1)):p===nearest(p.team)?1:.72);
   if(len>0.08){p.vx+=(dx/len*speed-p.vx)*Math.min(1,dt*7);p.vz+=(dz/len*speed-p.vz)*Math.min(1,dt*7)}else{p.vx*=Math.max(0,1-dt*9);p.vz*=Math.max(0,1-dt*9)}
   p.x=clamp(p.x+p.vx*dt,-23,23);p.z=clamp(p.z+p.vz*dt,-14,14);p.group.position.set(p.x,0,p.z);
   const velocity=Math.hypot(p.vx,p.vz);
