@@ -253,7 +253,24 @@ function loop(t){
  }
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
 }
-$('startBtn').addEventListener('click',start);$('slideBtn').addEventListener('click',slideTackle);$('passBtn').addEventListener('click',()=>kick('pass'));$('shootBtn').addEventListener('click',()=>kick('shoot'));$('throughBtn').addEventListener('click',()=>kick('through'));$('switchBtn').addEventListener('click',selectPlayer);
+$('startBtn').addEventListener('click',start);
+// Ações no pointerdown: cada dedo é tratado como um ponteiro independente (multitoque).
+function bindTouchAction(id,action){
+ const button=$(id);
+ button.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  button.classList.add('pressed');
+  action();
+ });
+ const release=()=>button.classList.remove('pressed');
+ ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>button.addEventListener(ev,release));
+}
+bindTouchAction('slideBtn',slideTackle);
+bindTouchAction('passBtn',()=>kick('pass'));
+bindTouchAction('shootBtn',()=>kick('shoot'));
+bindTouchAction('throughBtn',()=>kick('through'));
+bindTouchAction('switchBtn',selectPlayer);
 $('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'CONTINUAR':'PAUSAR';$('status').textContent=paused?'Partida pausada':'Partida em andamento'});
 $('backBtn').addEventListener('click',()=>{running=false;cancelAnimationFrame(raf);$('game').classList.add('hidden');$('menu').classList.remove('hidden')});
 const joystick=$('joystick'),stick=$('stick');let stickPointer=null;
