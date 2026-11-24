@@ -1,24 +1,19 @@
-name: Deploy Morais Football V1.0 to GitHub Pages
+name: Publish Morais Football V1.0
 on:
   push:
-    branches: [main, v1-modular-3d]
+    branches: [v1-modular-3d]
   workflow_dispatch:
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: publish-v1
+  cancel-in-progress: true
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate ES modules
+      - name: Validate JavaScript modules
         run: |
           node --check src/main.js
           node --check src/scene.js
@@ -26,10 +21,11 @@ jobs:
           node --check src/controls.js
           node --check src/ai.js
           node --check src/match.js
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: Publish website to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: .
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./
+          force_orphan: true
+          exclude_assets: '.github,android,node_modules,README.md,package-lock.json'
