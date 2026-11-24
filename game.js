@@ -65,9 +65,16 @@ function buildPitch(){
   const x=side*FIELD_X/2;
   line([[x,-9],[x-side*5,-9],[x-side*5,9],[x,9]],white);
   line([[x,-4],[x-side*2,-4],[x-side*2,4],[x,4]],white);
-  const goal=box(.25,2.4,7,mat(0xffffff),x+side*.9,1.15,0);goal.material.transparent=true;goal.material.opacity=.7;
-  for(let z=-3.5;z<=3.5;z+=1.75)box(1.8,.045,.035,mat(0xdce7ee),x+side*1.8,1.1,z);
-  box(.04,2.2,7,mat(0xffffff),x+side*2.7,1.1,0);
+  const postMat=mat(0xf4f7ee,.35),netMat=new THREE.LineBasicMaterial({color:0xe9f1e8,transparent:true,opacity:.58});
+  const post=(z)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,2.45,12),postMat);m.position.set(x,1.22,z);scene.add(m);m.castShadow=true};
+  post(-3.55);post(3.55);
+  const bar=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,7.1,12),postMat);bar.rotation.x=Math.PI/2;bar.position.set(x,2.43,0);scene.add(bar);bar.castShadow=true;
+  const backX=x+side*2.5;
+  const netPts=[];
+  const addNet=(a,b)=>{netPts.push(new THREE.Vector3(a[0],a[1],a[2]),new THREE.Vector3(b[0],b[1],b[2]))};
+  for(let z=-3.55;z<=3.56;z+=.7){addNet([x,0,z],[backX,0,z]);addNet([x,2.4,z],[backX,1.85,z]);addNet([backX,0,z],[backX,1.85,z])}
+  for(let y=0;y<=2.41;y+=.48){addNet([x,y,-3.55],[backX,y*.78,-3.55]);addNet([x,y,3.55],[backX,y*.78,3.55]);addNet([backX,y*.78,-3.55],[backX,y*.78,3.55])}
+  const netGeo=new THREE.BufferGeometry().setFromPoints(netPts);scene.add(new THREE.LineSegments(netGeo,netMat));
  }
  // Low stands and floodlight pylons frame the pitch.
  for(const side of [-1,1]){
@@ -108,7 +115,7 @@ function kick(type){
   if(mate){dx=mate.x-ball.position.x+(type==='through'?4:0);dz=mate.z-ball.position.z}
  }else{
   const keeper=players.find(p=>p.team===1&&p.index===0);
-  const targetZ=clamp(ball.position.z*.28-(keeper?keeper.z*.22:0),-2.7,2.7);
+  const targetZ=clamp(ball.position.z*.12-(keeper?keeper.z*.12:0),-2.95,2.95);
   dz=targetZ-ball.position.z;
  }
  const len=Math.hypot(dx,dz)||1;
@@ -157,7 +164,8 @@ function update(dt){
   if(len>0.08){p.vx+=(dx/len*speed-p.vx)*Math.min(1,dt*7);p.vz+=(dz/len*speed-p.vz)*Math.min(1,dt*7)}else{p.vx*=Math.max(0,1-dt*9);p.vz*=Math.max(0,1-dt*9)}
   p.x=clamp(p.x+p.vx*dt,-23,23);p.z=clamp(p.z+p.vz*dt,-14,14);p.group.position.set(p.x,0,p.z);
   const velocity=Math.hypot(p.vx,p.vz);
-  if(velocity>.2)p.group.rotation.y=Math.atan2(p.vx,p.vz);
+  if(p===controlled&&Math.hypot(move.x,move.z)>.08)p.group.rotation.y=Math.atan2(move.x,move.z);
+  else if(velocity>.2)p.group.rotation.y=Math.atan2(p.vx,p.vz);
   const stride=Math.min(1,velocity/5),phase=performance.now()*.012+(p.index%2)*Math.PI;
   p.legs[0].rotation.x=Math.sin(phase)*.72*stride;
   p.legs[1].rotation.x=-Math.sin(phase)*.72*stride;
@@ -167,16 +175,23 @@ function update(dt){
  // Keep player bodies from occupying the same point.
  for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){const a=players[i],b=players[j],dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz);if(d>0&&d<.8){const push=(.8-d)*.5;a.x-=dx/d*push;a.z-=dz/d*push;b.x+=dx/d*push;b.z+=dz/d*push;a.group.position.set(a.x,0,a.z);b.group.position.set(b.x,0,b.z)}}
  let vx=ball.userData.vx||0,vz=ball.userData.vz||0,vy=ball.userData.vy||0;
- // Controle da bola quando o atleta está perto e ela está desacelerada.
+ // Domínio assistido: a bola acompanha o pé do atleta quando ele chega perto.
  const controlDistance=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
- if(controlDistance<1.05&&Math.hypot(vx,vz)<5&&ball.position.y<.75){
+ const ballSpeed=Math.hypot(vx,vz);
+ const hasInput=Math.hypot(move.x,move.z)>.08;
+ if(controlDistance<1.55&&ballSpeed<8.5&&ball.position.y<1.05){
+  if(hasInput)active.group.rotation.y=Math.atan2(move.x,move.z);
   const facing=active.group.rotation.y;
-  ball.position.x=active.x+Math.sin(facing)*.82;
-  ball.position.z=active.z+Math.cos(facing)*.82;
-  vx=active.vx*.88;vz=active.vz*.88;vy=0;
+  const targetX=active.x+Math.sin(facing)*.82;
+  const targetZ=active.z+Math.cos(facing)*.82;
+  const follow=Math.min(1,dt*(hasInput?15:11));
+  ball.position.x+=(targetX-ball.position.x)*follow;
+  ball.position.z+=(targetZ-ball.position.z)*follow;
+  vx=active.vx*.92;vz=active.vz*.92;vy=0;
  }
- // Colisão entre a bola e os jogadores, com desvio e impulso.
+ // Colisão física com os demais atletas. O jogador controlado não chuta a bola para longe ao dominá-la.
  for(const p of players){
+  if(p===active&&controlDistance<1.55&&ballSpeed<8.5)continue;
   const dx=ball.position.x-p.x,dz=ball.position.z-p.z,dist=Math.hypot(dx,dz);
   if(dist>.001&&dist<.66&&ball.position.y<1.15){
    const nx=dx/dist,nz=dz/dist;
@@ -190,15 +205,15 @@ function update(dt){
  ball.position.x+=vx*dt;ball.position.z+=vz*dt;vy-=9.8*dt;ball.position.y+=vy*dt;
  ball.userData.shadow.position.set(ball.position.x,.018,ball.position.z);
  ball.userData.shadow.scale.setScalar(clamp(1-(ball.position.y-.36)*.22,.55,1));
- if(ball.position.y<.36){ball.position.y=.36;if(vy<-.9)vy=-vy*.38;else vy=0}
- const drag=Math.pow(ball.position.y>.37?.993:.978,dt*60);vx*=drag;vz*=drag;
+ if(ball.position.y<.36){ball.position.y=.36;if(vy<-.9)vy=-vy*.24;else vy=0}
+ const drag=Math.pow(ball.position.y>.37?.996:.986,dt*60);vx*=drag;vz*=drag;
  ball.userData.vx=vx;ball.userData.vz=vz;ball.userData.vy=vy;
  ball.rotation.x+=vz*dt*2;ball.rotation.z-=vx*dt*2;
  if(Math.abs(ball.position.z)>14.5){ball.position.z=clamp(ball.position.z,-14.5,14.5);ball.userData.vz*=-.55}
  if(Math.abs(ball.position.x)>24){
-  if(Math.abs(ball.position.z)<3.7&&ball.position.y<2.35){
+  if(Math.abs(ball.position.z)<3.18&&ball.position.y<2.18&&ball.position.y>.12){
    const side=ball.position.x>0?0:1;score[side]++;$(side===0?'homeScore':'awayScore').textContent=score[side];$('status').textContent='GOOOOL! ⚽';resetGoal();
-  }else{ball.position.x=clamp(ball.position.x,-24,24);ball.userData.vx*=-.5;$('status').textContent='Bola saiu ou bateu na trave';}
+  }else{ball.position.x=clamp(ball.position.x,-24,24);ball.userData.vx*=-.42;if(Math.abs(ball.position.z)>=3.18)$('status').textContent='A bola passou ao lado do gol';else $('status').textContent='A bola bateu no travessão';}
  }
  }
 function loop(t){
@@ -230,6 +245,7 @@ function updateStick(e){
 }
 joystick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);updateStick(e)});
 joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)updateStick(e)});
+joystick.addEventListener('touchmove',e=>{if(e.touches.length){const t=e.touches[0];updateStick({clientX:t.clientX,clientY:t.clientY})}},{passive:false});
 function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;move={x:0,z:0};stick.style.transform='translate(0,0)'}
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>joystick.addEventListener(ev,releaseStick));
 const sprintBtn=$('sprintBtn');sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();sprint=true});['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(ev=>sprintBtn.addEventListener(ev,()=>sprint=false));
