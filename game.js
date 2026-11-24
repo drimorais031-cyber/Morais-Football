@@ -214,10 +214,24 @@ function loop(t){
  }
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
 }
-$('startBtn').addEventListener('click',start);$('passBtn').addEventListener('click',()=>kick('pass'));$('shootBtn').addEventListener('click',()=>kick('shoot'));$('switchBtn').addEventListener('click',selectPlayer);
+$('startBtn').addEventListener('click',start);$('passBtn').addEventListener('click',()=>kick('pass'));$('shootBtn').addEventListener('click',()=>kick('shoot'));$('throughBtn').addEventListener('click',()=>kick('through'));$('switchBtn').addEventListener('click',selectPlayer);
 $('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'CONTINUAR':'PAUSAR';$('status').textContent=paused?'Partida pausada':'Partida em andamento'});
 $('backBtn').addEventListener('click',()=>{running=false;cancelAnimationFrame(raf);$('game').classList.add('hidden');$('menu').classList.remove('hidden')});
-document.querySelectorAll('[data-dir]').forEach(btn=>{const v={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[btn.dataset.dir];const on=e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);move={x:v[0],z:v[1]}};const off=()=>move={x:0,z:0};btn.addEventListener('pointerdown',on);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>btn.addEventListener(ev,off))});
+const joystick=$('joystick'),stick=$('stick');let stickPointer=null;
+function updateStick(e){
+ const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.31,len=Math.hypot(dx,dy);
+ if(len>max){dx=dx/len*max;dy=dy/len*max}
+ stick.style.transform='translate('+dx+'px,'+dy+'px)';
+ const nx=dx/max,ny=dy/max,mag=Math.hypot(nx,ny),dead=.13;
+ if(mag<dead){move={x:0,z:0};return}
+ const strength=(mag-dead)/(1-dead),scale=strength/mag;
+ move={x:nx*scale,z:ny*scale};
+}
+joystick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);updateStick(e)});
+joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)updateStick(e)});
+function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;move={x:0,z:0};stick.style.transform='translate(0,0)'}
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>joystick.addEventListener(ev,releaseStick));
 const sprintBtn=$('sprintBtn');sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();sprint=true});['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(ev=>sprintBtn.addEventListener(ev,()=>sprint=false));
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='ArrowUp'||e.key==='w')move.z=-1;if(e.key==='ArrowDown'||e.key==='s')move.z=1;if(e.key==='ArrowLeft'||e.key==='a')move.x=-1;if(e.key==='ArrowRight'||e.key==='d')move.x=1;if(e.key===' ')kick('shoot');if(e.key.toLowerCase()==='x')kick('pass')});
 window.addEventListener('keyup',e=>{keys[e.key]=false;if(['ArrowUp','w','ArrowDown','s'].includes(e.key))move.z=0;if(['ArrowLeft','a','ArrowRight','d'].includes(e.key))move.x=0});
