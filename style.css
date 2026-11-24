@@ -349,3 +349,6 @@ button{border:0;border-radius:9px;font-weight:900;letter-spacing:.7px;cursor:poi
  -webkit-user-select:none!important;
  user-select:none!important;
 }
+
+/* Android WebView: mantém o multitoque ativo sem gestos do navegador. */
+.mobile-controls,.left-controls,.actions,.actions button,.joystick{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
