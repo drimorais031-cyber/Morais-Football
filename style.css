@@ -302,3 +302,31 @@ button{border:0;border-radius:9px;font-weight:900;letter-spacing:.7px;cursor:poi
 @media (orientation:portrait){
  #game:not(.hidden) .mobile-controls .actions{grid-template-columns:repeat(2,clamp(48px,10vw,64px))!important;grid-template-rows:repeat(3,clamp(42px,8vw,54px))!important}
 }
+
+
+/* Botões de ação circulares, mantendo transparência e áreas de toque confortáveis. */
+#game:not(.hidden) .mobile-controls .actions{
+ grid-template-columns:repeat(2,clamp(56px,10.5vh,76px))!important;
+ grid-template-rows:repeat(3,clamp(56px,10.5vh,76px))!important;
+ gap:clamp(4px,.8vh,8px)!important;
+}
+#game:not(.hidden) .mobile-controls .actions button{
+ width:100%!important;height:100%!important;aspect-ratio:1/1!important;
+ border-radius:50%!important;
+ border-width:2px!important;
+}
+#game:not(.hidden) .mobile-controls .actions button.pressed{
+ transform:scale(calc(var(--control-scale,1)*.92))!important;
+}
+@media (orientation:landscape) and (max-height:520px){
+ #game:not(.hidden) .mobile-controls .actions{
+  grid-template-columns:repeat(2,clamp(48px,9.5vh,66px))!important;
+  grid-template-rows:repeat(3,clamp(48px,9.5vh,66px))!important;
+ }
+}
+@media (orientation:portrait){
+ #game:not(.hidden) .mobile-controls .actions{
+  grid-template-columns:repeat(2,clamp(46px,10vw,62px))!important;
+  grid-template-rows:repeat(3,clamp(46px,10vw,62px))!important;
+ }
+}
