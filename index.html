@@ -16,48 +16,62 @@
 </div>
 <main class="app">
   <section id="menu" class="menu">
+    <div class="menu-yellow-ribbon"></div>
     <header class="menu-top">
       <div class="brand">
         <div class="brand-mark">MF</div>
-        <div><strong>MORAIS <span>FOOTBALL</span></strong><small>CLUBE • FUTEBOL • PAIXÃO</small></div>
+        <div><strong>MORAIS <span>FOOTBALL</span></strong><small>O FUTEBOL É NOSSO</small></div>
       </div>
-      <div class="top-status"><i></i> MODO OFFLINE <b>3D ALPHA</b></div>
+      <div class="top-status"><i></i> ONLINE EM BREVE <b>3D</b></div>
     </header>
     <div class="menu-main">
-      <div class="hero-copy">
-        <p class="eyebrow">A SUA PARTIDA COMEÇA AQUI</p>
-        <h1>ENTRE EM<br><em>CAMPO.</em></h1>
-        <p class="hero-sub">Monte seu confronto. Escolha seu time.<br>Mostre quem manda no gramado.</p>
-        <div class="hero-tags"><span>⚽ PARTIDA RÁPIDA</span><span>◈ ESTÁDIO 3D</span><span>▣ JOGUE OFFLINE*</span></div>
+      <div class="menu-player-art" aria-hidden="true">
+        <div class="player-glow"></div><div class="player-shadow"></div>
+        <div class="hero-player"><div class="hero-hair"></div><div class="hero-head"></div><div class="hero-neck"></div><div class="hero-shirt"><span>MF</span></div><div class="hero-arm left"></div><div class="hero-arm right"></div><div class="hero-shorts"></div><div class="hero-leg left"></div><div class="hero-leg right"></div><div class="hero-boot left"></div><div class="hero-boot right"></div></div>
+        <span class="player-name">MORAIS FC <b>10</b></span>
       </div>
-      <div class="match-panel">
-        <div class="match-heading"><span>PARTIDA RÁPIDA</span><small>ESCOLHA O CONFRONTO</small></div>
-        <div class="team-pick">
-          <label class="team-card home-card"><span class="team-caption">SEU TIME</span><span class="team-emblem">MF</span><select id="homeTeam"><option>Morais FC</option><option>Brasil</option><option>São Paulo</option><option>Palmeiras</option><option>Santos</option><option>Flamengo</option><option>Corinthians</option><option>Argentina</option></select></label>
-          <div class="versus">VS</div>
-          <label class="team-card away-card"><span class="team-caption">ADVERSÁRIO</span><span class="team-emblem rival">RF</span><select id="awayTeam"><option>Rivais FC</option><option>Argentina</option><option>Brasil</option><option>São Paulo</option><option>Palmeiras</option><option>Santos</option><option>Flamengo</option><option>Corinthians</option></select></label>
+      <div class="menu-content">
+        <div class="menu-title"><span>O SEU FUTEBOL COMEÇA AQUI</span><h1>MORAIS <em>FOOTBALL</em></h1><p>Monte seu time. Entre em campo. Faça história.</p></div>
+        <div class="menu-tabs"><span class="active">MODO JOGO</span><span>MEU CLUBE</span><span>EXTRAS</span></div>
+        <div class="feature-banner"><div><small>DESTAQUE DA TEMPORADA</small><h2>WORLDWIDE<br>CLUBS</h2><p>Escolha seu clube e dispute a partida.</p></div><div class="banner-ball">⚽</div><div class="banner-lines"></div></div>
+        <div class="mode-title">ESCOLHA O MODO DE JOGO</div>
+        <div class="mode-cards">
+          <div class="mode-card selected"><span class="mode-icon">⚽</span><b>PARTIDA</b><small>RÁPIDA</small></div>
+          <div class="mode-card"><span class="mode-icon">◈</span><b>DESAFIO</b><small>EM BREVE</small></div>
+          <div class="mode-card"><span class="mode-icon">▤</span><b>PLANO</b><small>DE JOGO</small></div>
+          <div class="mode-card"><span class="mode-icon">♛</span><b>MEU</b><small>TIME</small></div>
+          <div class="mode-card"><span class="mode-icon">＋</span><b>CONTRATO</b><small>EM BREVE</small></div>
         </div>
-        <button id="startBtn" class="primary"><span>INICIAR PARTIDA</span><b>▶</b></button>
-        <div class="match-foot"><span>⏱ 3 MINUTOS</span><span>◉ 11 CONTRA 11</span><span>🎮 CONTROLES TOUCH</span></div>
+        <div class="match-panel">
+          <div class="match-heading"><span>PARTIDA RÁPIDA</span><small>DEFINA O CONFRONTO</small></div>
+          <div class="team-pick">
+            <label class="team-card home-card"><span class="team-caption">SEU TIME</span><span class="team-emblem">MF</span><select id="homeTeam"><option>Morais FC</option><option>Brasil</option><option>São Paulo</option><option>Palmeiras</option><option>Santos</option><option>Flamengo</option><option>Corinthians</option><option>Argentina</option></select></label>
+            <div class="versus">VS</div>
+            <label class="team-card away-card"><span class="team-caption">ADVERSÁRIO</span><span class="team-emblem rival">RF</span><select id="awayTeam"><option>Rivais FC</option><option>Argentina</option><option>Brasil</option><option>São Paulo</option><option>Palmeiras</option><option>Santos</option><option>Flamengo</option><option>Corinthians</option></select></label>
+          </div>
+          <button id="startBtn" class="primary"><span>JOGAR AGORA</span><b>▶</b></button>
+        </div>
       </div>
     </div>
-    <footer class="menu-bottom"><span>MORAIS FOOTBALL <b>•</b> PROJETO INDEPENDENTE</span><span>*O primeiro carregamento exige internet para baixar o motor 3D.</span></footer>
+    <footer class="menu-bottom"><span>MORAIS FOOTBALL <b>•</b> SUA PAIXÃO PELO FUTEBOL</span><span>*Primeiro carregamento exige internet.</span></footer>
   </section>
-
   <section id="game" class="game hidden">
     <div class="scorebar"><span id="homeLabel">MORAIS FC</span><strong><b id="homeScore">0</b><i>:</i><b id="awayScore">0</b></strong><span id="awayLabel">RIVAIS FC</span><time id="clock">00:00</time></div>
     <div id="viewport" class="viewport"><div id="loading">CARREGANDO ESTÁDIO 3D...</div></div>
     <div class="mobile-controls">
       <div class="left-controls">
-        <button id="switchBtn" class="switch-control">TROCAR JOGADOR</button>
         <div class="control-caption">MOVIMENTO</div>
-        <div id="joystick" class="joystick" role="application" aria-label="Analógico virtual. Arraste para movimentar o jogador."><div class="joy-arrows">+</div><div id="stick" class="stick"></div></div>
+        <div id="joystick" class="joystick" role="application" aria-label="Analógico virtual para movimentar o jogador">
+          <span class="joy-arrow up">▲</span><span class="joy-arrow down">▼</span><span class="joy-arrow left">◀</span><span class="joy-arrow right">▶</span><div id="stick" class="stick"></div>
+        </div>
       </div>
       <div class="actions">
-        <button id="throughBtn" class="through-action">LANÇAMENTO</button>
-        <button id="shootBtn" class="shoot-action">CHUTE</button>
         <button id="passBtn" class="pass-action">PASSE</button>
-        <button id="sprintBtn" class="sprint">CORRER</button>
+        <button id="shootBtn" class="shoot-action">CHUTE</button>
+        <button id="switchBtn" class="switch-control">SWITCH</button>
+        <button id="sprintBtn" class="sprint">SPRINT</button>
+        <button id="slideBtn" class="slide-action">SLIDE</button>
+        <button id="throughBtn" class="through-action">LANÇAMENTO</button>
       </div>
     </div>
     <div class="game-footer"><span id="status">Partida em andamento</span><button id="pauseBtn" class="secondary">PAUSAR</button><button id="backBtn" class="secondary">MENU</button></div>
