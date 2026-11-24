@@ -180,7 +180,7 @@ export function createScene(){
   [[28,-15],[28,0],[28,15],[12,-8],[12,8]].forEach((p,i)=>makePlayer(i+5,1,i===0?"GK":"FIELD",...p,players,scene));
   return{
     scene,camera,renderer,ball,players,
-    setTeamColors(home,away){for(const p of players){const t=p.team===0?home:away;p.kit.color.setHex(t.shirt);p.shorts.material.color.setHex(t.shorts);}},
+    setTeamColors(home,away){for(const p of players){const t=p.team===0?home:away;p.kit.color.setHex(t.shirt);p.shorts.color.setHex(t.shorts);}},
     resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)},
     follow(p,dt){
       const target=new THREE.Vector3(p.x*.28,45.5,18+p.z*.48);
