@@ -87,8 +87,14 @@ function buildPitch(){
 function setup(){
  players=[];for(let t=0;t<2;t++)formations.forEach((p,i)=>{const x=t===0?p[0]:-p[0],z=t===0?p[1]:-p[1];players.push(makePlayer(t,i,x,z))});
  active=players.find(p=>p.team===0&&p.index===9);active.ring.visible=true;
- const geo=new THREE.SphereGeometry(.34,20,16);ball=new THREE.Mesh(geo,mat(0xffffff,.35));ball.position.set(0,.36,0);ball.castShadow=true;scene.add(ball);
- const seam=new THREE.Mesh(new THREE.TorusGeometry(.23,.012,5,24),mat(0x202020));seam.rotation.x=Math.PI/2;ball.add(seam);
+ const ballCanvas=document.createElement('canvas');ballCanvas.width=1024;ballCanvas.height=512;
+ const ctx=ballCanvas.getContext('2d');ctx.fillStyle='#f4f4ec';ctx.fillRect(0,0,1024,512);
+ const pentagon=(cx,cy,r,rotation)=>{ctx.beginPath();for(let k=0;k<5;k++){const a=rotation+k*Math.PI*2/5;const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(k===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.fill()};
+ ctx.fillStyle='#171a18';
+ for(let row=-1;row<4;row++)for(let col=-1;col<7;col++){const px=col*170+(row%2)*85,py=row*170+80;pentagon(px,py,43,(row+col)*.12)}
+ ctx.strokeStyle='#b8b9b0';ctx.lineWidth=5;for(let y=0;y<=512;y+=85){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1024,y);ctx.stroke()}
+ const ballTexture=new THREE.CanvasTexture(ballCanvas);ballTexture.colorSpace=THREE.SRGBColorSpace;
+ const geo=new THREE.SphereGeometry(.34,32,24);ball=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({map:ballTexture,roughness:.48,metalness:0}));ball.position.set(0,.36,0);ball.castShadow=true;scene.add(ball);
  const ballShadow=new THREE.Mesh(new THREE.CircleGeometry(.42,24),new THREE.MeshBasicMaterial({color:0x07110b,transparent:true,opacity:.38,depthWrite:false}));
  ballShadow.rotation.x=-Math.PI/2;ballShadow.position.y=.018;scene.add(ballShadow);ball.userData.shadow=ballShadow;
 }
@@ -179,19 +185,19 @@ function update(dt){
  const controlDistance=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
  const ballSpeed=Math.hypot(vx,vz);
  const hasInput=Math.hypot(move.x,move.z)>.08;
- if(controlDistance<1.55&&ballSpeed<8.5&&ball.position.y<1.05){
+ if(controlDistance<1.75&&ballSpeed<11&&ball.position.y<1.1){
   if(hasInput)active.group.rotation.y=Math.atan2(move.x,move.z);
   const facing=active.group.rotation.y;
   const targetX=active.x+Math.sin(facing)*.82;
   const targetZ=active.z+Math.cos(facing)*.82;
-  const follow=Math.min(1,dt*(hasInput?15:11));
+  const follow=Math.min(1,dt*(hasInput?19:14));
   ball.position.x+=(targetX-ball.position.x)*follow;
   ball.position.z+=(targetZ-ball.position.z)*follow;
-  vx=active.vx*.92;vz=active.vz*.92;vy=0;
+  vx=active.vx*.98;vz=active.vz*.98;vy=0;
  }
  // Colisão física com os demais atletas. O jogador controlado não chuta a bola para longe ao dominá-la.
  for(const p of players){
-  if(p===active&&controlDistance<1.55&&ballSpeed<8.5)continue;
+  if(p===active&&controlDistance<1.75&&ballSpeed<11)continue;
   const dx=ball.position.x-p.x,dz=ball.position.z-p.z,dist=Math.hypot(dx,dz);
   if(dist>.001&&dist<.66&&ball.position.y<1.15){
    const nx=dx/dist,nz=dz/dist;
@@ -212,7 +218,7 @@ function update(dt){
  if(Math.abs(ball.position.z)>14.5){ball.position.z=clamp(ball.position.z,-14.5,14.5);ball.userData.vz*=-.55}
  if(Math.abs(ball.position.x)>24){
   if(Math.abs(ball.position.z)<3.18&&ball.position.y<2.18&&ball.position.y>.12){
-   const side=ball.position.x>0?0:1;score[side]++;$(side===0?'homeScore':'awayScore').textContent=score[side];$('status').textContent='GOOOOL! ⚽';resetGoal();
+   const side=ball.position.x>0?0:1;score[side]++;$(side===0?'homeScore':'awayScore').textContent=score[side];$('status').textContent='GOOOOOOL! ⚽🥅';resetGoal();
   }else{ball.position.x=clamp(ball.position.x,-24,24);ball.userData.vx*=-.42;if(Math.abs(ball.position.z)>=3.18)$('status').textContent='A bola passou ao lado do gol';else $('status').textContent='A bola bateu no travessão';}
  }
  }
