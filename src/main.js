@@ -37,6 +37,7 @@ function shoot(player,power,aim){
   const len=Math.hypot(goal.x,goal.z)||1,dir={x:goal.x/len,z:goal.z/len};
   ball.reset(player.mesh.position.x+dir.x*1.8,player.mesh.position.z+dir.z*1.8);
   ball.kick(dir,power,1.4+power*.17,player.id);
+  ballReleaseTimer=0.85;
   say(power>20?"CHUTE POTENTE!":"CHUTE!");
 }
 function movePlayer(player,dt,input,controlled){
