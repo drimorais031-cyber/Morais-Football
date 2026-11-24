@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-8";
-import { BallPhysics } from "./physics.js?v=mf-v1-8";
-import { Controls } from "./controls.js?v=mf-v1-8";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-8";
-import { Match } from "./match.js?v=mf-v1-8";
+import { createScene } from "./scene.js?v=mf-v1-9";
+import { BallPhysics } from "./physics.js?v=mf-v1-9";
+import { Controls } from "./controls.js?v=mf-v1-9";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-9";
+import { Match } from "./match.js?v=mf-v1-9";
 
 const $=s=>document.querySelector(s);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
@@ -71,8 +71,10 @@ function resetKickoff(){
 }
 function loop(){
   requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.033);
-  if(!match.running||match.paused){world.render();return}
-  match.update(dt);ballReleaseTimer=Math.max(0,ballReleaseTimer-dt);const input=controls.read();let controlled=world.players[active];
+  if(!match.running){world.render();return}
+  match.update(dt);
+  if(match.paused){world.render();return}
+  ballReleaseTimer=Math.max(0,ballReleaseTimer-dt);const input=controls.read();let controlled=world.players[active];
   if(input.switch&&performance.now()-lastSwitch>220){select(nearestTeammate());lastSwitch=performance.now();controlled=world.players[active]}
   const possession=teamHasPossession();
   if(!possession){const closest=nearestTeammate();if(closest&&distance2(closest.mesh.position,ball.mesh.position)+1.25<distance2(controlled.mesh.position,ball.mesh.position)){select(closest);controlled=world.players[active]}}
