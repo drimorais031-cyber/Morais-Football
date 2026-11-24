@@ -100,18 +100,18 @@ function setup(){
 }
 function nearest(team){return players.filter(p=>p.team===team&&p.index!==0).sort((a,b)=>Math.hypot(a.x-ball.position.x,a.z-ball.position.z)-Math.hypot(b.x-ball.position.x,b.z-ball.position.z))[0]}
 function selectPlayer(){
- if(!ball||!players.length)return;
- const candidates=players.filter(p=>p.team===0&&p.index!==0);
- candidates.sort((a,b)=>{
-  const da=Math.hypot(a.x-ball.position.x,a.z-ball.position.z);
-  const db=Math.hypot(b.x-ball.position.x,b.z-ball.position.z);
-  return da-db;
- });
- const p=candidates[0];
- if(!p)return;
+ if(!running||paused||!ball||!players.length)return;
+ // SWITCH escolhe sempre o atleta de linha mais próximo da bola.
+ let closest=null,closestDistance=Infinity;
+ for(const p of players){
+  if(p.team!==0||p.index===0)continue;
+  const distance=Math.hypot(p.x-ball.position.x,p.z-ball.position.z);
+  if(distance<closestDistance){closest=p;closestDistance=distance}
+ }
+ if(!closest)return;
  if(active)active.ring.visible=false;
- active=p;active.ring.visible=true;
- $('status').textContent='Jogador mais próximo da bola selecionado';
+ active=closest;active.ring.visible=true;
+ $('status').textContent='Controle: jogador mais próximo da bola';
 }
 function kick(type){
  if(!running||paused||goalPause>0||!active)return;
@@ -267,12 +267,17 @@ function updateStick(e){
  const strength=(mag-dead)/(1-dead),scale=strength/mag;
  move={x:nx*scale,z:ny*scale};
 }
-joystick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);updateStick(e)});
-joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)updateStick(e)});
-joystick.addEventListener('touchmove',e=>{if(e.touches.length){const t=e.touches[0];updateStick({clientX:t.clientX,clientY:t.clientY})}},{passive:false});
+joystick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;try{joystick.setPointerCapture(e.pointerId)}catch(_){}updateStick(e)});
+joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e)}});
 function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;move={x:0,z:0};stick.style.transform='translate(0,0)'}
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>joystick.addEventListener(ev,releaseStick));
-const sprintBtn=$('sprintBtn');sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();sprint=true});['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(ev=>sprintBtn.addEventListener(ev,()=>sprint=false));
+// O sprint só desliga quando o toque é solto ou cancelado, não ao sair da borda do botão.
+const sprintBtn=$('sprintBtn');let sprintPointer=null;
+sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();sprintPointer=e.pointerId;sprint=true;try{sprintBtn.setPointerCapture(e.pointerId)}catch(_){}sprintBtn.classList.add('pressed')});
+function releaseSprint(e){if(sprintPointer!==null&&e.pointerId!==sprintPointer)return;sprintPointer=null;sprint=false;sprintBtn.classList.remove('pressed')}
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>sprintBtn.addEventListener(ev,releaseSprint));
+window.addEventListener('blur',()=>{sprint=false;sprintPointer=null;move={x:0,z:0};stick.style.transform='translate(0,0)';sprintBtn.classList.remove('pressed')});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){sprint=false;sprintPointer=null;move={x:0,z:0};sprintBtn.classList.remove('pressed')}});
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='ArrowUp'||e.key==='w')move.z=-1;if(e.key==='ArrowDown'||e.key==='s')move.z=1;if(e.key==='ArrowLeft'||e.key==='a')move.x=-1;if(e.key==='ArrowRight'||e.key==='d')move.x=1;if(e.key===' ')kick('shoot');if(e.key.toLowerCase()==='x')kick('pass')});
 window.addEventListener('keyup',e=>{keys[e.key]=false;if(['ArrowUp','w','ArrowDown','s'].includes(e.key))move.z=0;if(['ArrowLeft','a','ArrowRight','d'].includes(e.key))move.x=0});
 window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(document.hidden)paused=true});
