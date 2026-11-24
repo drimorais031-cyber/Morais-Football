@@ -115,30 +115,35 @@ button{border:0;border-radius:9px;font-weight:900;letter-spacing:.7px;cursor:poi
 @media (orientation:landscape) and (max-height:520px){.menu{padding:6px 14px}.brand-mark{width:34px;height:34px}.menu-main{grid-template-columns:minmax(145px,.52fr) minmax(0,1.7fr);gap:12px}.menu-player-art{min-height:0}.hero-player{min-height:180px}.menu-title h1{font-size:clamp(24px,5vh,42px)}.menu-content{gap:6px}.feature-banner{min-height:64px;padding:8px 12px}.feature-banner h2{font-size:19px}.mode-card{min-height:52px}.mode-card .mode-icon{font-size:19px}.match-panel{padding:7px}.team-card{padding:4px}.team-emblem{width:25px;height:25px}.team-card select{padding-top:4px}.primary{margin-top:5px;padding:7px}.menu-bottom{padding-top:3px}.game{padding:3px 6px;gap:3px}.mobile-controls{bottom:24px;padding:0 14px}.joystick{width:118px;height:118px}.actions{grid-template-columns:60px 66px;grid-template-rows:45px 45px 45px;gap:5px}.actions button{font-size:7px}.game-footer{min-height:20px}}
 @media (orientation:landscape) and (max-width:700px){.menu{padding:6px 10px}.menu-main{grid-template-columns:minmax(115px,.48fr) minmax(0,1.8fr);gap:8px}.hero-player{min-height:160px}.player-name{font-size:7px}.menu-title h1{font-size:clamp(22px,5vh,38px)}.menu-title p{font-size:8px}.menu-tabs span{padding:5px 10px;font-size:7px}.feature-banner{min-height:58px;padding:6px 9px}.feature-banner h2{font-size:16px}.feature-banner p{font-size:7px}.mode-cards{gap:4px}.mode-card{min-height:45px;gap:2px}.mode-card b{font-size:6px}.mode-card small{font-size:5px}.mode-icon{font-size:16px}.match-panel{padding:5px}.match-heading{padding-bottom:4px;margin-bottom:4px}.team-emblem{width:22px;height:22px;margin:2px}.team-card select{font-size:8px}.primary{padding:6px;margin-top:4px;font-size:8px}.menu-bottom{font-size:6px}.mobile-controls{gap:7px;bottom:22px;padding:0 9px}.joystick{width:102px;height:102px}.actions{grid-template-columns:52px 58px;grid-template-rows:40px 40px 40px;gap:4px}.actions button{padding:3px;font-size:6px}.scorebar{gap:7px}.scorebar strong{gap:7px}.game-footer span{font-size:8px}.secondary{padding:6px 9px;font-size:8px}}
 
-/* Emergency layout fix: never clip menu content on short mobile screens */
+/* Landscape-first compact menu for Android phones */
 @media (orientation:landscape) and (max-height:600px){
- html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
- body{height:auto;min-height:100dvh}
- .app{width:100%;height:auto;min-height:100dvh;overflow:visible}
- .menu{height:auto;min-height:100dvh;overflow:visible;padding:8px 12px 14px}
- .menu-top{min-height:42px}
- .menu-main{display:block;flex:0 0 auto;width:100%;min-height:0;margin:8px auto}
- .menu-player-art{display:none}
- .menu-content{display:flex;gap:8px}
- .menu-title h1{font-size:clamp(24px,5vh,36px)}
- .menu-title p{font-size:9px}
- .menu-tabs span{padding:6px 12px}
- .feature-banner{min-height:62px;padding:7px 12px}
- .feature-banner h2{font-size:18px}
- .mode-card{min-height:48px}
- .match-panel{padding:7px}
- .team-card{padding:5px}
- .team-emblem{width:24px;height:24px;margin:3px}
- .team-card select{padding-top:4px}
- .primary{padding:8px;margin-top:5px}
- .menu-bottom{padding-top:4px}
+ html,body{width:100%;height:100%;min-height:0;overflow:hidden}
+ body{height:100dvh;min-height:0}
+ .app{width:100vw;height:100dvh;min-height:0;overflow:hidden}
+ .menu{width:100%;height:100dvh;min-height:0;overflow:hidden;padding:5px 10px}
+ .menu-top{min-height:34px;flex:0 0 auto}
+ .brand-mark{width:32px;height:32px;font-size:15px}
+ .brand strong{font-size:12px}.brand small{font-size:7px}
+ .top-status{font-size:7px}
+ .menu-main{display:grid;grid-template-columns:minmax(105px,.42fr) minmax(0,1.8fr);align-items:center;gap:8px;flex:1 1 auto;width:100%;min-height:0;margin:3px auto}
+ .menu-player-art{display:flex;min-height:0;height:100%}
+ .hero-player{height:88%;min-height:0;width:min(145px,82%)}
+ .menu-content{display:flex;min-width:0;gap:4px}
+ .menu-title span{font-size:7px}.menu-title h1{font-size:clamp(20px,5vh,32px);margin:2px 0}.menu-title p{font-size:7px;margin:2px 0}
+ .menu-tabs span,.menu-tabs button{padding:4px 10px;font-size:7px}
+ .feature-banner{min-height:46px;padding:5px 9px}.feature-banner small{font-size:6px}.feature-banner h2{font-size:15px;margin:2px 0}.feature-banner p{font-size:6px;margin:2px 0}.banner-ball{font-size:40px}
+ .mode-title{font-size:7px}.mode-cards{gap:4px}.mode-card{min-height:37px;gap:1px}.mode-icon{font-size:15px}.mode-card b{font-size:6px}.mode-card small{font-size:5px}
+ .match-panel{padding:5px}.match-heading{padding-bottom:3px;margin-bottom:3px}.match-heading span{font-size:7px}.match-heading small{font-size:5px}
+ .team-card{padding:3px}.team-caption{font-size:5px}.team-emblem{width:19px;height:19px;margin:1px;font-size:9px}.team-card select{font-size:7px;padding-top:2px}
+ .primary{padding:5px;margin-top:3px;font-size:8px}.primary b{font-size:11px}
+ .menu-bottom{padding-top:2px;font-size:5px;gap:6px}
+ .game{height:100dvh;min-height:0;padding:3px 6px;gap:3px}
+ .mobile-controls{bottom:23px;padding:0 12px}
+ .joystick{width:clamp(100px,20vh,125px);height:clamp(100px,20vh,125px)}
+ .actions{grid-template-columns:repeat(2,clamp(54px,10vh,68px));grid-template-rows:repeat(3,clamp(38px,7.5vh,48px));gap:4px}
+ .actions button{font-size:7px}
+ .game-footer{min-height:20px}
 }
-
 .menu-tabs button{padding:7px 17px;border:0;border-radius:24px;background:transparent;color:#c8d2ff;font-size:8px;font-weight:900}.menu-tabs button.active{background:#ffe500;color:#10136b}.mode-card{border:0;cursor:pointer;font-family:inherit}#menuInfoPanel h2{margin:0 0 8px;color:#ffe500;font-size:17px}#menuInfoPanel p{margin:6px 0;color:#e0e7ff;font-size:12px;line-height:1.5}#menuInfoPanel button{margin-top:10px;padding:10px 16px;background:#ffe500;color:#10145f}
 
 .actions button.pressed{filter:brightness(1.25);transform:scale(.94);box-shadow:0 0 0 3px #ffffff55,0 5px 13px #0008}
