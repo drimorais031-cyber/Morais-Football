@@ -1,11 +1,22 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-9";
-import { BallPhysics } from "./physics.js?v=mf-v1-9";
-import { Controls } from "./controls.js?v=mf-v1-9";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-9";
-import { Match } from "./match.js?v=mf-v1-9";
+import { createScene } from "./scene.js?v=mf-v1-10";
+import { BallPhysics } from "./physics.js?v=mf-v1-10";
+import { Controls } from "./controls.js?v=mf-v1-10";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-10";
+import { Match } from "./match.js?v=mf-v1-10";
 
 const $=s=>document.querySelector(s);
+const TEAMS=[{"id":"flamengo","name":"Flamengo","short":"FLA","mascot":"Urubu","emoji":"🦅","shirt":11999533,"shorts":1513239},{"id":"corinthians","name":"Corinthians","short":"COR","mascot":"Mosqueteiro","emoji":"⚔️","shirt":15856107,"shorts":1513239},{"id":"palmeiras","name":"Palmeiras","short":"PAL","mascot":"Porco","emoji":"🐷","shirt":554051,"shorts":15856107},{"id":"saopaulo","name":"São Paulo","short":"SPFC","mascot":"Santo Paulo","emoji":"⭐","shirt":16052456,"shorts":1513239},{"id":"santos","name":"Santos","short":"SAN","mascot":"Peixe","emoji":"🐟","shirt":16053485,"shorts":1513239},{"id":"gremio","name":"Grêmio","short":"GRE","mascot":"Mosqueteiro","emoji":"⚔️","shirt":2440579,"shorts":15856107},{"id":"internacional","name":"Internacional","short":"INT","mascot":"Saci","emoji":"🧢","shirt":12918316,"shorts":15856107},{"id":"atleticomg","name":"Atlético-MG","short":"CAM","mascot":"Galo","emoji":"🐓","shirt":2105376,"shorts":15856107},{"id":"cruzeiro","name":"Cruzeiro","short":"CRU","mascot":"Raposa","emoji":"🦊","shirt":1461146,"shorts":15856107},{"id":"vasco","name":"Vasco","short":"VAS","mascot":"Almirante","emoji":"🏴‍☠️","shirt":1513239,"shorts":15856107}];
+const teamById=id=>TEAMS.find(t=>t.id===id)||TEAMS[0];
+function crest(team){return '<span class="crest" style="--crest:'+('#'+team.shirt.toString(16).padStart(6,"0"))+';--trim:'+('#'+team.shorts.toString(16).padStart(6,"0"))+'">'+team.short+'</span>'}
+function preview(id,target){const t=teamById(id);$(target).innerHTML=crest(t)+'<span><b>'+t.name+'</b><small>'+t.emoji+' Mascote: '+t.mascot+'</small></span>'}
+function fillTeamSelects(){
+ for(const id of ["#homeTeam","#awayTeam"]){$(id).innerHTML=TEAMS.map(t=>'<option value="'+t.id+'">'+t.name+'</option>').join("")}
+ $("#homeTeam").value="palmeiras";$("#awayTeam").value="flamengo";
+ const refresh=()=>{if($("#homeTeam").value===$("#awayTeam").value){const alt=TEAMS.find(t=>t.id!==$("#homeTeam").value);$("#awayTeam").value=alt.id}preview($("#homeTeam").value,"#homePreview");preview($("#awayTeam").value,"#awayPreview")};
+ $("#homeTeam").addEventListener("change",refresh);$("#awayTeam").addEventListener("change",refresh);refresh();
+}
+fillTeamSelects();
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
 const home=world.players.filter(p=>p.team===0);
 let active=3,charge=0,lastSwitch=0,shotPlayer=null,ballReleaseTimer=0;
@@ -105,6 +116,10 @@ function loop(){
   world.follow(ball.mesh.position,dt);world.render();
 }
 $("#play").onclick=()=>{
-  match.start();charge=0;shotPlayer=null;ballReleaseTimer=0;resetKickoff();$("#start").style.display="none";say("BOLA ROLANDO!");
+  const homeTeam=teamById($("#homeTeam").value),awayTeam=teamById($("#awayTeam").value);
+  world.setTeamColors(homeTeam,awayTeam);
+  $("#hud").children[0].innerHTML=crest(homeTeam)+' <strong id="homeScore">0</strong>';
+  $("#hud").children[2].innerHTML='<strong id="awayScore">0</strong> '+crest(awayTeam);
+  match.start();charge=0;shotPlayer=null;ballReleaseTimer=0;resetKickoff();$("#start").style.display="none";say(homeTeam.name+" x "+awayTeam.name);
 };
 addEventListener("resize",()=>world.resize());world.resize();loop();
