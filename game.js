@@ -356,37 +356,92 @@ function update(dt){
  if(goalPause>0){goalPause-=dt;return}
  if(slideTimer>0)slideTimer=Math.max(0,slideTimer-dt);
  const controlled=active;
+ // Leitura tática: identifica quem está mais perto da bola e quem deve pressionar/cobrir.
+ const rankedByTeam=[0,1].map(team=>players
+  .filter(p=>p.team===team&&p.index!==0)
+  .map(p=>({p,d:Math.hypot(p.x-ball.position.x,p.z-ball.position.z)}))
+  .sort((a,b)=>a.d-b.d));
+ const firstChaser=rankedByTeam.map(list=>list[0]?.p||null);
+ const secondChaser=rankedByTeam.map(list=>list[1]?.p||null);
+ const ballVelocity=Math.hypot(ball.userData.vx||0,ball.userData.vz||0);
+ let teamInPossession=possessionTeam;
+ if(teamInPossession===null&&ball.position.y<1.1&&ballVelocity<7){
+  const nearestOverall=rankedByTeam.map((list,team)=>({team,d:list[0]?.d??Infinity})).sort((a,b)=>a.d-b.d)[0];
+  if(nearestOverall&&nearestOverall.d<2.35)teamInPossession=nearestOverall.team;
+ }
+ const ballX=ball.position.x,ballZ=ball.position.z;
  players.forEach(p=>{
+  const attackDir=p.team===0?1:-1;
+  const ownChaser=firstChaser[p.team],coverPlayer=secondChaser[p.team];
   let tx=p.homeX,tz=p.homeZ;
-  if(p===controlled){if(slideTimer>0){const rival=players.filter(q=>q.team===1&&q.index!==0).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];if(rival){tx=rival.x;tz=rival.z}}else{tx=p.x+move.x*100;tz=p.z+move.z*100}}
-  else if(p.index===0){
+  if(p===controlled){
+   if(slideTimer>0){
+    const rival=players.filter(q=>q.team!==p.team&&q.index!==0).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];
+    if(rival){tx=rival.x;tz=rival.z}
+   }else{tx=p.x+move.x*100;tz=p.z+move.z*100}
+  }else if(p.index===0){
+   // Goleiro acompanha o ângulo da bola e sai um pouco quando há perigo real.
    const goalX=p.team===0?-22.2:22.2;
-   const danger=p.team===0?ball.position.x< -12:ball.position.x>12;
-   tx=danger?goalX+(ball.position.x-goalX)*.12:goalX;
-   tz=clamp(ball.position.z,-3.0,3.0);
-  }
-  else{
-   const ch=nearest(p.team);
-   if(p===ch){
-    tx=ball.position.x+(p.team===0?-0.9:0.9);tz=ball.position.z;
+   const danger=p.team===0?ballX< -10:ballX>10;
+   tx=danger?goalX+(ballX-goalX)*.16:goalX;
+   tz=clamp(ballZ*.82,-3.25,3.25);
+  }else if(teamInPossession===p.team){
+   // Com a posse: um jogador oferece apoio curto; os demais atacam espaços e abrem o campo.
+   if(p===ownChaser){
+    const predictedX=ballX+clamp((ball.userData.vx||0)*.22,-2.5,2.5);
+    const predictedZ=ballZ+clamp((ball.userData.vz||0)*.22,-2,2);
+    tx=predictedX-attackDir*.55;tz=predictedZ;
    }else{
-    const attackDir=p.team===0?1:-1;
-    tx=p.homeX+clamp((ball.position.x-p.homeX)*.22,-4,4);
-    tz=p.homeZ+clamp((ball.position.z-p.homeZ)*.24,-3,3);
-    if(Math.abs(ball.position.x-p.x)<7)tx+=attackDir*1.4;
+    const forwardProgress=(ballX-p.homeX)*attackDir;
+    const isForward=p.index>=9;
+    const isWide=p.index===1||p.index===4||p.index===5||p.index===8;
+    const runAhead=(isForward?7.2:(isWide?4.2:2.6))+clamp(forwardProgress*.22,0,4.5);
+    const lane=p.homeZ===0?(p.index%2? -4:4):p.homeZ;
+    tx=p.homeX+attackDir*runAhead+attackDir*clamp((ballX-p.homeX)*.28,-2,7);
+    tz=clamp(lane*.48+ballZ*.48+(isWide?Math.sign(lane)*1.8:0),-12.2,12.2);
+    // Se o companheiro está livre na frente, acelera a ultrapassagem.
+    if(isForward&&Math.abs(ballZ-p.z)>2.5)tz=clamp(tz+Math.sign(ballZ-p.z)*1.2,-12.5,12.5);
+   }
+  }else{
+   // Sem a bola: pressão coordenada, cobertura e recomposição em bloco.
+   if(p===ownChaser){
+    tx=ballX+clamp((ball.userData.vx||0)*.18,-2.2,2.2);
+    tz=ballZ+clamp((ball.userData.vz||0)*.18,-1.8,1.8);
+   }else if(p===coverPlayer){
+    const ownGoalX=p.team===0?-21:21;
+    tx=ballX+(ownGoalX-ballX)*.28;
+    tz=ballZ*.72;
+   }else{
+    const defensiveLine=p.index<=4?0:(p.index<=8?3.5:7.0);
+    tx=p.homeX+attackDir*clamp((ballX-p.homeX)*.24,-5,5)-attackDir*defensiveLine*.22;
+    tz=p.homeZ+clamp((ballZ-p.homeZ)*.30,-4.5,4.5);
+    // O lado oposto fecha por dentro, evitando que todos persigam a bola.
+    if(Math.abs(p.homeZ)>5&&Math.sign(p.homeZ)!==Math.sign(ballZ))tz*=.78;
    }
   }
-  let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);let speed=p===controlled?(slideTimer>0?11.5:(sprint?9.6:7.8)):p.speed*(p===nearest(p.team)?1:.72);
-  if(len>0.08){const desiredX=dx/len*speed,desiredZ=dz/len*speed,blend=Math.min(1,dt*(p===controlled?13:7));p.vx+=(desiredX-p.vx)*blend;p.vz+=(desiredZ-p.vz)*blend}else{const drag=Math.max(0,1-dt*(p===controlled?12:9));p.vx*=drag;p.vz*=drag}
+  let dx=tx-p.x,dz=tz-p.z,len=Math.hypot(dx,dz);
+  const isChasing=p===ownChaser&&p!==controlled;
+  const baseSpeed=p===controlled?(slideTimer>0?11.8:(sprint?10.4:8.1)):(p.index===0?6.4:(isChasing?8.8:(teamInPossession===p.team?8.0:7.7)));
+  const speed=baseSpeed*(len>7?1.04:1);
+  if(len>0.12){
+   const desiredX=dx/len*speed,desiredZ=dz/len*speed;
+   const acceleration=p===controlled?15:(isChasing?10.5:8.2);
+   const blend=Math.min(1,dt*acceleration);
+   p.vx+=(desiredX-p.vx)*blend;p.vz+=(desiredZ-p.vz)*blend;
+  }else{
+   const drag=Math.max(0,1-dt*(p===controlled?12:10));
+   p.vx*=drag;p.vz*=drag;
+  }
   p.x=clamp(p.x+p.vx*dt,-23,23);p.z=clamp(p.z+p.vz*dt,-14,14);p.group.position.set(p.x,0,p.z);
   const velocity=Math.hypot(p.vx,p.vz);
   if(p===controlled&&Math.hypot(move.x,move.z)>.08)p.group.rotation.y=Math.atan2(move.x,move.z);
-  else if(velocity>.2)p.group.rotation.y=Math.atan2(p.vx,p.vz);
-  const stride=Math.min(1,velocity/5),phase=performance.now()*.012+(p.index%2)*Math.PI;
-  p.legs[0].rotation.x=Math.sin(phase)*.72*stride;
-  p.legs[1].rotation.x=-Math.sin(phase)*.72*stride;
-  p.arms[0].rotation.x=-Math.sin(phase)*.48*stride;
-  p.arms[1].rotation.x=Math.sin(phase)*.48*stride;
+  else if(velocity>.25)p.group.rotation.y=Math.atan2(p.vx,p.vz);
+  // Passadas mais rápidas e amplas conforme a velocidade do atleta.
+  const stride=Math.min(1,velocity/5.4),phase=performance.now()*(.0105+stride*.004)+(p.index%2)*Math.PI;
+  p.legs[0].rotation.x=Math.sin(phase)*(.58+stride*.22)*stride;
+  p.legs[1].rotation.x=-Math.sin(phase)*(.58+stride*.22)*stride;
+  p.arms[0].rotation.x=-Math.sin(phase)*.52*stride;
+  p.arms[1].rotation.x=Math.sin(phase)*.52*stride;
  });
  // Keep player bodies from occupying the same point.
  for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){const a=players[i],b=players[j],dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz);if(d>0&&d<.8){const push=(.8-d)*.5;a.x-=dx/d*push;a.z-=dz/d*push;b.x+=dx/d*push;b.z+=dz/d*push;a.group.position.set(a.x,0,a.z);b.group.position.set(b.x,0,b.z)}}
