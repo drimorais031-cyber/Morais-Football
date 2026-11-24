@@ -534,19 +534,43 @@ $('shrinkControlBtn').addEventListener('click',()=>resizeSelectedControl(-.1));
 $('growControlBtn').addEventListener('click',()=>resizeSelectedControl(.1));
 resetControlsBtn.addEventListener('click',()=>{try{localStorage.removeItem('moraisFootballControls')}catch(e){}controlElements().forEach(el=>{el.style.position='';el.style.left='';el.style.top='';el.style.right='';el.style.bottom='';el.style.margin='';el.style.removeProperty('--control-scale');delete el.dataset.customPosition;delete el.dataset.controlScale});setControlsEditMode(false);$('selectedControlSize').textContent='100%'});
 controlElements().forEach(el=>{
+ const activePointers=new Map();let pinchStart=null;
  el.addEventListener('pointerdown',e=>{
   if(!controlsEditMode)return;
   e.preventDefault();e.stopImmediatePropagation();
-  const r=el.getBoundingClientRect();dragControl={el,id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};
-  el.setPointerCapture?.(e.pointerId);
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{el.setPointerCapture(e.pointerId)}catch(_){}
+  if(activePointers.size===1){
+   const r=el.getBoundingClientRect();dragControl={el,id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};
+  }else if(activePointers.size===2){
+   const pts=[...activePointers.values()],dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+   pinchStart={distance:Math.max(1,dist),scale:Number(el.dataset.controlScale||1)};
+   dragControl=null;
+  }
  },true);
  el.addEventListener('pointermove',e=>{
-  if(!dragControl||dragControl.el!==el||dragControl.id!==e.pointerId)return;
-  e.preventDefault();
-  const x=clamp(e.clientX-dragControl.dx,0,innerWidth-el.offsetWidth),y=clamp(e.clientY-dragControl.dy,0,innerHeight-el.offsetHeight);
-  el.style.position='fixed';el.style.left=x+'px';el.style.top=y+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1';
+  if(!controlsEditMode||!activePointers.has(e.pointerId))return;
+  e.preventDefault();e.stopImmediatePropagation();
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(activePointers.size>=2&&pinchStart){
+   const pts=[...activePointers.values()],dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+   const next=clamp(Math.round((pinchStart.scale*dist/pinchStart.distance)*20)/20,.5,2);
+   el.dataset.controlScale=String(next);el.style.setProperty('--control-scale',String(next));
+   $('selectedControlSize').textContent=Math.round(next*100)+'%';
+  }else if(dragControl&&dragControl.el===el&&dragControl.id===e.pointerId){
+   const x=clamp(e.clientX-dragControl.dx,0,innerWidth-el.offsetWidth),y=clamp(e.clientY-dragControl.dy,0,innerHeight-el.offsetHeight);
+   el.style.position='fixed';el.style.left=x+'px';el.style.top=y+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1';
+  }
  },true);
- const finish=e=>{if(dragControl&&dragControl.el===el&&dragControl.id===e.pointerId){dragControl=null;saveControlPositions()}};
+ const finish=e=>{
+  if(!activePointers.has(e.pointerId))return;
+  activePointers.delete(e.pointerId);pinchStart=null;dragControl=null;
+  if(activePointers.size===1){
+   const [id,p]=[...activePointers.entries()][0],r=el.getBoundingClientRect();
+   dragControl={el,id,dx:p.x-r.left,dy:p.y-r.top};
+  }
+  saveControlPositions();
+ };
  ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,finish,true));
 });
 applyControlPositions();
