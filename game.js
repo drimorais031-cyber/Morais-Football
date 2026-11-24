@@ -251,35 +251,57 @@ function selectPlayer(){
 function kick(type){
  if(!running||paused||goalPause>0||!active)return;
  const now=performance.now();if(now-lastKick<260)return;
- const d=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
- if(d>3.15){$('status').textContent='Chegue mais perto da bola para jogar';return}
+ const contactDistance=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
+ if(contactDistance>3.15){$('status').textContent='Chegue mais perto da bola para jogar';return}
  lastKick=now;
- // Pequena assistência de contato evita que o botão falhe quando a bola está junto ao pé.
- let dx=active.team===0?1:-1,dz=clamp(-ball.position.z*.12,-1.2,1.2),receiver=null;
- if(type==='pass'||type==='through'){
-  const mates=players.filter(p=>p.team===0&&p!==active&&p.index!==0);
-  receiver=mates.sort((a,b)=>{
-   const score=p=>Math.hypot(p.x-active.x,p.z-active.z)-Math.max(0,(p.x-active.x))*(type==='through'?.95:.65);
-   return score(a)-score(b);
-  })[0];
-  if(receiver){dx=receiver.x-ball.position.x+(type==='through'?4:0);dz=receiver.z-ball.position.z}
- }else{
+
+ const teammates=players.filter(p=>p.team===0&&p!==active&&p.index!==0);
+ let receiver=null,dx=active.team===0?1:-1,dz=0;
+
+ if(type==='pass'&&teammates.length){
+  // Passe curto: escolhe o companheiro mais próximo do jogador que está com a bola.
+  receiver=teammates.reduce((best,p)=>{
+   if(!best)return p;
+   return Math.hypot(p.x-active.x,p.z-active.z)<Math.hypot(best.x-active.x,best.z-active.z)?p:best;
+  },null);
+ }else if(type==='through'&&teammates.length){
+  // Lançamento: procura o companheiro mais adiantado, mais perto do gol adversário.
+  // O time da casa ataca para +X e o visitante para -X.
+  const attackDirection=active.team===0?1:-1;
+  receiver=teammates.reduce((best,p)=>{
+   if(!best)return p;
+   const progress=(p.x-active.x)*attackDirection;
+   const bestProgress=(best.x-active.x)*attackDirection;
+   if(progress>bestProgress)return p;
+   if(progress===bestProgress&&Math.abs(p.z-ball.position.z)<Math.abs(best.z-ball.position.z))return p;
+   return best;
+  },null);
+ }
+
+ if(receiver){
+  dx=receiver.x-ball.position.x;
+  dz=receiver.z-ball.position.z;
+  // Pequena antecipação no lançamento para a bola chegar à frente do companheiro.
+  if(type==='through')dx+=(active.team===0?2.2:-2.2);
+ }else if(type==='shoot'){
   const keeper=players.find(p=>p.team===1&&p.index===0);
   const targetZ=clamp(ball.position.z*.12-(keeper?keeper.z*.12:0),-2.95,2.95);
   dz=targetZ-ball.position.z;
  }
+
  const len=Math.hypot(dx,dz)||1;
- const power=type==='shoot'?25:type==='through'?17.5:14.5;
+ const power=type==='shoot'?25:type==='through'?18.5:14.5;
  ball.position.x=active.x+Math.sin(active.group.rotation.y)*.78;
  ball.position.z=active.z+Math.cos(active.group.rotation.y)*.78;
  ball.position.y=.38;
- ball.userData.vx=dx/len*power;ball.userData.vz=dz/len*power;
+ ball.userData.vx=dx/len*power;
+ ball.userData.vz=dz/len*power;
  ball.userData.vy=type==='shoot'?4.1:type==='through'?1.35:.55;
- // Após passe ou lançamento, o controle muda para o companheiro escolhido para receber.
+
  if(receiver){
   if(active)active.ring.visible=false;
   active=receiver;active.ring.visible=true;
-  $('status').textContent='PASSE! Controle mudou para o jogador que vai receber.';
+  $('status').textContent=type==='through'?'LANÇAMENTO! Bola direcionada ao companheiro mais avançado.':'PASSE! Bola direcionada ao companheiro mais próximo.';
  }else{
   $('status').textContent=type==='shoot'?'CHUTE DIRECIONADO! ⚽':'PASSE PARA FRENTE!';
  }
