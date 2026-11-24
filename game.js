@@ -40,9 +40,13 @@ function makePlayer(team,index,x,z){
  const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),skin);head.position.y=1.82;group.add(head);
  const legGeo=new THREE.CapsuleGeometry(.13,.48,3,6),legs=[];
  for(const side of [-1,1]){const leg=new THREE.Mesh(legGeo,shorts);leg.position.set(side*.19,.42,0);group.add(leg);legs.push(leg);const foot=new THREE.Mesh(new THREE.BoxGeometry(.2,.12,.38),boots);foot.position.set(side*.19,.12,-.12);group.add(foot)}
+ const armGeo=new THREE.CapsuleGeometry(.105,.48,3,6),arms=[];
+ for(const side of [-1,1]){const arm=new THREE.Mesh(armGeo,shirt);arm.position.set(side*.43,1.22,0);arm.rotation.z=side*.12;group.add(arm);arms.push(arm)}
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.105,.12,.16,8),skin);neck.position.y=1.68;group.add(neck);
+ const hair=new THREE.Mesh(new THREE.SphereGeometry(.255,12,8,0,Math.PI*2,0,Math.PI*.48),mat(0x292522));hair.position.y=1.91;group.add(hair);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.58,.045,6,24),mat(0xffffff));ring.rotation.x=Math.PI/2;ring.position.y=.04;ring.visible=false;group.add(ring);
  group.position.set(x,0,z);scene.add(group);
- return {group,ring,legs,team,index,x,z,vx:0,vz:0,homeX:x,homeZ:z,speed:index===0?6.2:7.2};
+ return {group,ring,legs,arms,team,index,x,z,vx:0,vz:0,homeX:x,homeZ:z,speed:index===0?6.2:7.2};
 }
 function buildPitch(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0x9fc4d5);scene.fog=new THREE.Fog(0x9fc4d5,55,105);
@@ -115,7 +119,7 @@ function kick(type){
 }
 function start(){
  try {
- if(!renderer)buildPitch();if(ball)scene.remove(ball);players.forEach(p=>scene.remove(p.group));score=[0,0];seconds=0;
+ if(!renderer)buildPitch();if(ball?.userData.shadow)scene.remove(ball.userData.shadow);if(ball)scene.remove(ball);players.forEach(p=>scene.remove(p.group));score=[0,0];seconds=0;move={x:0,z:0};sprint=false;goalPause=0;
  $('homeLabel').textContent=$('homeTeam').value.toUpperCase();$('awayLabel').textContent=$('awayTeam').value.toUpperCase();$('homeScore').textContent='0';$('awayScore').textContent='0';
  setup();$('menu').classList.add('hidden');$('game').classList.remove('hidden');$('loading').style.display='none';running=true;paused=false;$('status').textContent='Partida em andamento';$('pauseBtn').textContent='PAUSAR';last=performance.now();cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(loop);
  } catch(error) { console.error('Erro ao iniciar partida:',error); running=false; const msg=document.createElement('div');msg.style.cssText='padding:16px;margin:10px;color:#fff;background:#391b1b;border:1px solid #b84b4b;border-radius:10px;font:13px/1.5 Arial';msg.textContent='Não foi possível iniciar a partida 3D: '+error.message;$('loading').style.display='none';viewport.appendChild(msg); }
@@ -155,6 +159,8 @@ function update(dt){
   const stride=Math.min(1,velocity/5),phase=performance.now()*.012+(p.index%2)*Math.PI;
   p.legs[0].rotation.x=Math.sin(phase)*.72*stride;
   p.legs[1].rotation.x=-Math.sin(phase)*.72*stride;
+  p.arms[0].rotation.x=-Math.sin(phase)*.48*stride;
+  p.arms[1].rotation.x=Math.sin(phase)*.48*stride;
  });
  // Keep player bodies from occupying the same point.
  for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){const a=players[i],b=players[j],dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz);if(d>0&&d<.8){const push=(.8-d)*.5;a.x-=dx/d*push;a.z-=dz/d*push;b.x+=dx/d*push;b.z+=dz/d*push;a.group.position.set(a.x,0,a.z);b.group.position.set(b.x,0,b.z)}}
