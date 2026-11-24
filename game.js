@@ -117,14 +117,14 @@ function kick(type){
  if(!running||paused||goalPause>0||!active)return;
  const d=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
  if(d>2.5){$('status').textContent='Aproxime-se da bola';return}
- let dx=active.team===0?1:-1,dz=clamp(-ball.position.z*.12,-1.2,1.2);
+ let dx=active.team===0?1:-1,dz=clamp(-ball.position.z*.12,-1.2,1.2),receiver=null;
  if(type==='pass'||type==='through'){
   const mates=players.filter(p=>p.team===0&&p!==active&&p.index!==0);
-  const mate=mates.sort((a,b)=>{
+  receiver=mates.sort((a,b)=>{
    const score=p=>Math.hypot(p.x-active.x,p.z-active.z)-Math.max(0,(p.x-active.x))*(type==='through'?.95:.65);
    return score(a)-score(b);
   })[0];
-  if(mate){dx=mate.x-ball.position.x+(type==='through'?4:0);dz=mate.z-ball.position.z}
+  if(receiver){dx=receiver.x-ball.position.x+(type==='through'?4:0);dz=receiver.z-ball.position.z}
  }else{
   const keeper=players.find(p=>p.team===1&&p.index===0);
   const targetZ=clamp(ball.position.z*.12-(keeper?keeper.z*.12:0),-2.95,2.95);
@@ -134,7 +134,14 @@ function kick(type){
  const power=type==='shoot'?22:type==='through'?17:13;
  ball.userData.vx=dx/len*power;ball.userData.vz=dz/len*power;
  ball.userData.vy=type==='shoot'?4.6:type==='through'?1.8:1.0;
- $('status').textContent=type==='shoot'?'CHUTE DIRECIONADO! ⚽':type==='through'?'LANÇAMENTO EM PROFUNDIDADE!':'PASSE PARA FRENTE!';
+ // Após passe ou lançamento, o controle muda para o companheiro escolhido para receber.
+ if(receiver){
+  if(active)active.ring.visible=false;
+  active=receiver;active.ring.visible=true;
+  $('status').textContent='PASSE! Controle mudou para o jogador que vai receber.';
+ }else{
+  $('status').textContent=type==='shoot'?'CHUTE DIRECIONADO! ⚽':'PASSE PARA FRENTE!';
+ }
 }
 function slideTackle(){
  if(!running||paused||!active)return;
