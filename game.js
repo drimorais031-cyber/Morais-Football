@@ -561,6 +561,7 @@ function bindTouchAction(id,action){
   if(controlsEditMode)return;
   e.preventDefault();e.stopPropagation();
   actionPointers.set(e.pointerId,button);
+  try{button.setPointerCapture(e.pointerId)}catch(_){}
   button.classList.add('pressed');
   action();
  },{passive:false});
@@ -583,7 +584,7 @@ function updateStick(e){
  const strength=(mag-dead)/(1-dead),scale=strength/mag;
  move={x:nx*scale,z:ny*scale};
 }
-joystick.addEventListener('pointerdown',e=>{if(controlsEditMode)return;e.preventDefault();e.stopPropagation();stickPointer=e.pointerId;updateStick(e)},{passive:false});
+joystick.addEventListener('pointerdown',e=>{if(controlsEditMode)return;e.preventDefault();e.stopPropagation();stickPointer=e.pointerId;try{joystick.setPointerCapture(e.pointerId)}catch(_){}updateStick(e)},{passive:false});
 window.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e)}},{passive:false});
 function releasePointer(e){
  const button=actionPointers.get(e.pointerId);
@@ -595,7 +596,7 @@ window.addEventListener('pointerup',releasePointer);
 window.addEventListener('pointercancel',releasePointer);
 // Sprint mantém seu próprio identificador de toque e não interfere no analógico nem nas ações.
 const sprintBtn=$('sprintBtn');let sprintPointer=null;
-sprintBtn.addEventListener('pointerdown',e=>{if(controlsEditMode)return;e.preventDefault();e.stopPropagation();sprintPointer=e.pointerId;sprint=true;sprintBtn.classList.add('pressed')},{passive:false});
+sprintBtn.addEventListener('pointerdown',e=>{if(controlsEditMode)return;e.preventDefault();e.stopPropagation();sprintPointer=e.pointerId;try{sprintBtn.setPointerCapture(e.pointerId)}catch(_){}sprint=true;sprintBtn.classList.add('pressed')},{passive:false});
 window.addEventListener('blur',()=>{sprint=false;sprintPointer=null;stickPointer=null;actionPointers.forEach(b=>b.classList.remove('pressed'));actionPointers.clear();move={x:0,z:0};stick.style.transform='translate(0,0)';sprintBtn.classList.remove('pressed')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){sprint=false;sprintPointer=null;stickPointer=null;actionPointers.forEach(b=>b.classList.remove('pressed'));actionPointers.clear();move={x:0,z:0};sprintBtn.classList.remove('pressed')}});
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='ArrowUp'||e.key==='w')move.z=-1;if(e.key==='ArrowDown'||e.key==='s')move.z=1;if(e.key==='ArrowLeft'||e.key==='a')move.x=-1;if(e.key==='ArrowRight'||e.key==='d')move.x=1;if(e.key===' ')kick('shoot');if(e.key.toLowerCase()==='x')kick('pass')});
