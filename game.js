@@ -170,6 +170,53 @@ function buildPitch(){
   box(2.8,.32,.65,mat(0xeaf6ff),x,7.1,z);
   for(let i=0;i<5;i++)box(.38,.2,.08,mat(0xffffff),x-1.05+i*.52,7.1,z-.36);
  }
+ // Torcida nas arquibancadas: instâncias leves para manter bom desempenho no celular.
+ const crowdBodyGeo=new THREE.SphereGeometry(.15,.0+8,7);
+ const crowdHeadGeo=new THREE.SphereGeometry(.105,8,7);
+ const crowdBodyMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95});
+ const crowdHeadMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9});
+ const crowdPositions=[];
+ // Pessoas sentadas nas três arquibancadas laterais.
+ for(const side of [-1,1])for(let tier=0;tier<3;tier++){
+  const z=side*(18.2+tier*2.45)-side*.28,y=.45+tier*1.18;
+  for(let i=0;i<34;i++)crowdPositions.push({x:-23.8+i*1.45,z,y:y+.72,seed:i*7+tier*31+(side===1?0:17)});
+ }
+ // Pessoas também atrás dos gols.
+ for(const side of [-1,1])for(let tier=0;tier<3;tier++){
+  const x=side*(25.8+tier*2.35)-side*.28,y=.42+tier*1.15;
+  for(let i=0;i<23;i++)crowdPositions.push({x,z:-15.2+i*1.38,y:y+.7,seed:i*11+tier*29+(side===1?13:3)});
+ }
+ const crowdBodies=new THREE.InstancedMesh(crowdBodyGeo,crowdBodyMat,crowdPositions.length);
+ const crowdHeads=new THREE.InstancedMesh(crowdHeadGeo,crowdHeadMat,crowdPositions.length);
+ const dummy=new THREE.Object3D(),shirtColors=[0xc8323c,0x2461a8,0xe0bd36,0xe8e8e2,0x27764a,0x242b34,0x7c4ba5,0xd87532];
+ const skinColors=[0xf0c49c,0xd9a17c,0xb97854,0x8e6049];
+ crowdPositions.forEach((p,i)=>{
+  const sway=((p.seed*17)%9)*.018;
+  dummy.position.set(p.x,p.y,p.z);dummy.rotation.set(0,0,((p.seed%5)-2)*.035);dummy.scale.set(.85,1,.8);dummy.updateMatrix();crowdBodies.setMatrixAt(i,dummy.matrix);
+  crowdBodies.setColorAt(i,new THREE.Color(shirtColors[p.seed%shirtColors.length]));
+  dummy.position.set(p.x+sway,p.y+.27,p.z);dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();crowdHeads.setMatrixAt(i,dummy.matrix);
+  crowdHeads.setColorAt(i,new THREE.Color(skinColors[p.seed%skinColors.length]));
+ });
+ crowdBodies.instanceMatrix.needsUpdate=true;crowdHeads.instanceMatrix.needsUpdate=true;
+ crowdBodies.castShadow=false;crowdHeads.castShadow=false;scene.add(crowdBodies,crowdHeads);
+ // Bandeiras grandes dos clubes nos anéis superiores, com movimento suave de vento.
+ scene.userData.stadiumFlags=[];
+ const flagColors=[0xb8e83f,0xf2d52e,0xd51e2b,0x2456a6,0xf4f4f4];
+ for(const side of [-1,1])for(let i=0;i<7;i++){
+  const x=-21+i*7,z=side*27.5,group=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,3.4,8),mat(0xcbd5d9,.45));pole.position.y=1.7;group.add(pole);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute([0,3.15,0,1.65,2.72,0,0,2.25,0],3));
+  geo.setIndex([0,1,2]);geo.computeVertexNormals();
+  const cloth=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:flagColors[(i+(side===1?0:2))%flagColors.length],side:THREE.DoubleSide,roughness:.8}));
+  group.add(cloth);group.position.set(x,5.65,z);scene.add(group);
+  scene.userData.stadiumFlags.push({cloth,phase:i*.8+side});
+ }
+ // Iluminação de estádio: refletores fortes apontados para o gramado.
+ for(const x of [-22,22])for(const z of [-25.5,25.5]){
+  const lamp=new THREE.PointLight(0xeaf4ff,38,92,2);
+  lamp.position.set(x,8.1,z);lamp.castShadow=false;scene.add(lamp);
+ }
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat(0x405b3d));ground.rotation.x=-Math.PI/2;ground.position.y=-.4;scene.add(ground);
 }
 function setup(){
@@ -379,6 +426,7 @@ function loop(t){
   camera.position.lerp(desired,Math.min(1,dt*1.8));
   camera.lookAt(tx,0,tz);
  }
+ if(scene.userData.stadiumFlags){const wind=performance.now()*.001;scene.userData.stadiumFlags.forEach(f=>{f.cloth.rotation.y=Math.sin(wind*2.1+f.phase)*.16;f.cloth.rotation.z=Math.sin(wind*1.6+f.phase)*.07})}
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
 }
 $('startBtn').addEventListener('click',start);
