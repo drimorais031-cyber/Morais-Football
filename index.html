@@ -6,7 +6,14 @@
 <meta name="theme-color" content="#07110b">
 <meta name="description" content="Morais Football 3D">
 <title>Morais Football</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=menu-fix-20261123">
+<style>
+html,body{margin:0;min-height:100%;background:#080b68;color:#fff}
+#orientationNotice{display:none!important}
+.app{display:block!important;width:100%;min-height:100dvh;height:auto;overflow:visible!important}
+#menu:not(.hidden){display:flex!important;position:relative;z-index:5;width:100%;height:auto;min-height:100dvh;overflow:visible!important}
+@media(max-width:900px),(max-height:600px){#menu .menu-main{display:block!important;flex:0 0 auto!important;width:100%;min-height:0;margin:12px auto!important}#menu .menu-player-art{display:none!important}#menu .menu-content{display:flex;flex-direction:column;width:100%;gap:10px}#menu .menu-bottom{margin-top:8px;flex-wrap:wrap}}
+</style>
 </head>
 <body>
 <div id="orientationNotice" role="status">
@@ -77,6 +84,6 @@
     <div class="game-footer"><span id="status">Partida em andamento</span><button id="pauseBtn" class="secondary">PAUSAR</button><button id="backBtn" class="secondary">MENU</button></div>
   </section>
 </main>
-<script type="module" src="game.js"></script>
+<script type="module" src="game.js?v=menu-fix-20261123"></script>
 </body>
 </html>
