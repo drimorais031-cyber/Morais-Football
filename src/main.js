@@ -8,7 +8,7 @@ import { Match } from "./match.js?v=mf-v1-3";
 const $=s=>document.querySelector(s);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
 const home=world.players.filter(p=>p.team===0);
-let active=1,charge=0,wasShooting=false,lastSwitch=0,shotPlayer=null;
+let active=3,charge=0,wasShooting=false,lastSwitch=0,shotPlayer=null;
 const say=message=>{const n=$("#notice");n.textContent=message;clearTimeout(say.timer);say.timer=setTimeout(()=>n.textContent="",1400)};
 const match=new Match(score=>{$("#homeScore").textContent=score.home;$("#awayScore").textContent=score.away;$("#clock").textContent=match.format()},say);
 function select(player){if(!player)return;active=player.id;world.players.forEach(p=>p.ring.visible=p.id===active)}
@@ -29,13 +29,13 @@ function pass(player,longPass,aim){
   const receiver=chooseReceiver(player,longPass,aim);if(!receiver)return;
   const dx=receiver.mesh.position.x-player.mesh.position.x,dz=receiver.mesh.position.z-player.mesh.position.z,len=Math.hypot(dx,dz)||1;
   const direction={x:dx/len,z:dz/len},power=longPass?THREE.MathUtils.clamp(12+len*.22,14,23):THREE.MathUtils.clamp(7.5+len*.22,8.5,15);
-  ball.reset(player.mesh.position.x+direction.x*.9,player.mesh.position.z+direction.z*.9);ball.kick(direction,power,longPass?3.2:.35,player.id);select(receiver);
+  ball.reset(player.mesh.position.x+direction.x*1.8,player.mesh.position.z+direction.z*1.8);ball.kick(direction,power,longPass?3.2:.35,player.id);select(receiver);say(longPass?"LANÇAMENTO!":"PASSE!");
 }
 function shoot(player,power,aim){
   const goal={x:50-player.mesh.position.x,z:-player.mesh.position.z},aimLen=Math.hypot(aim.x,aim.z);
   if(aimLen>.2){goal.z+=(aim.z/aimLen)*8;goal.x+=(aim.x/aimLen)*2.5}
   const len=Math.hypot(goal.x,goal.z)||1,dir={x:goal.x/len,z:goal.z/len};
-  ball.reset(player.mesh.position.x+dir.x*.95,player.mesh.position.z+dir.z*.95);
+  ball.reset(player.mesh.position.x+dir.x*1.8,player.mesh.position.z+dir.z*1.8);
   ball.kick(dir,power,1.4+power*.17,player.id);
   say(power>20?"CHUTE POTENTE!":"CHUTE!");
 }
@@ -63,6 +63,11 @@ function controlBall(player,input,dt){
   ball.v.x=player.velocity.x*.78;ball.v.z=player.velocity.z*.78;
   if(input.pass)pass(player,false,input);if(input.through)pass(player,true,input);
 }
+function resetKickoff(){
+  world.players.forEach(p=>{p.mesh.position.set(p.home.x,0,p.home.z);p.velocity={x:0,z:0};p.stamina=100});
+  const kickoff=home[3];kickoff.mesh.position.set(-2.1,0,0);kickoff.velocity={x:0,z:0};
+  ball.reset();select(kickoff);
+}
 function loop(){
   requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.033);
   if(!match.running||match.paused){world.render();return}
@@ -87,8 +92,7 @@ function loop(){
   wasShooting=input.shoot;
   ball.update(dt,world.players,team=>{
     match.goal(team);ball.reset();
-    world.players.forEach(p=>{p.mesh.position.set(p.home.x,0,p.home.z);p.velocity={x:0,z:0}});
-    select(home[1]);
+    resetKickoff();
   });
   $("#power").style.width=charge+"%";
   $("#powerValue").textContent=Math.round(charge)+"%";
@@ -96,8 +100,6 @@ function loop(){
   world.follow(ball.mesh.position,dt);world.render();
 }
 $("#play").onclick=()=>{
-  match.start();charge=0;wasShooting=false;shotPlayer=null;ball.reset();
-  world.players.forEach(p=>{p.mesh.position.set(p.home.x,0,p.home.z);p.velocity={x:0,z:0};p.stamina=100});
-  select(home[1]);$("#start").style.display="none";say("BOLA ROLANDO!");
+  match.start();charge=0;wasShooting=false;shotPlayer=null;resetKickoff();$("#start").style.display="none";say("BOLA ROLANDO!");
 };
 addEventListener("resize",()=>world.resize());world.resize();loop();
