@@ -493,10 +493,23 @@ function setControlsEditMode(enabled){
  editControlsBtn.textContent=enabled?'CONCLUIR POSIÇÃO':'MOVER CONTROLES';
  $('controlHelp').textContent=enabled?'Arraste o analógico e cada botão para qualquer lugar da tela. Toque em CONCLUIR POSIÇÃO para salvar.':'Ative para arrastar o analógico e os botões. A posição fica salva neste aparelho.';
 }
-function openControlsSettings(){controlSettings.classList.remove('hidden');setControlsEditMode(false)}
-openControlSettings.addEventListener('click',openControlsSettings);
-closeControlSettings.addEventListener('click',()=>{setControlsEditMode(false);controlSettings.classList.add('hidden')});
-editControlsBtn.addEventListener('click',()=>{setControlsEditMode(!controlsEditMode);if(!controlsEditMode)saveControlPositions()});
+function openControlsSettings(){setControlsEditMode(false);controlSettings.classList.remove('hidden');openControlSettings.textContent='⚙ CONTROLES'}
+openControlSettings.addEventListener('click',()=>{
+ if(controlsEditMode){setControlsEditMode(false);saveControlPositions();openControlSettings.textContent='⚙ CONTROLES'}
+ else openControlsSettings();
+});
+closeControlSettings.addEventListener('click',()=>{setControlsEditMode(false);controlSettings.classList.add('hidden');openControlSettings.textContent='⚙ CONTROLES'});
+editControlsBtn.addEventListener('click',()=>{
+ const enable=!controlsEditMode;
+ setControlsEditMode(enable);
+ if(enable){
+  controlSettings.classList.add('hidden');
+  openControlSettings.textContent='✓ CONCLUIR';
+ }else{
+  saveControlPositions();
+  openControlSettings.textContent='⚙ CONTROLES';
+ }
+});
 resetControlsBtn.addEventListener('click',()=>{try{localStorage.removeItem('moraisFootballControls')}catch(e){}controlElements().forEach(el=>{el.style.position='';el.style.left='';el.style.top='';el.style.right='';el.style.bottom='';el.style.margin='';delete el.dataset.customPosition});setControlsEditMode(false)});
 controlElements().forEach(el=>{
  el.addEventListener('pointerdown',e=>{
