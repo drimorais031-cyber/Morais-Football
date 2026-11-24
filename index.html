@@ -39,15 +39,11 @@ html,body{margin:0;min-height:100%;background:#080b68;color:#fff}
       </div>
       <div class="menu-content">
         <div class="menu-title"><span>O SEU FUTEBOL COMEÇA AQUI</span><h1>MORAIS <em>FOOTBALL</em></h1><p>Monte seu time. Entre em campo. Faça história.</p></div>
-        <div class="menu-tabs"><span class="active">MODO JOGO</span><span>MEU CLUBE</span><span>EXTRAS</span></div>
+        <nav class="menu-tabs"><button type="button" class="active" data-tab="game">MODO JOGO</button><button type="button" data-tab="club">MEU CLUBE</button><button type="button" data-tab="extras">EXTRAS</button></nav>
         <div class="feature-banner"><div><small>DESTAQUE DA TEMPORADA</small><h2>WORLDWIDE<br>CLUBS</h2><p>Escolha seu clube e dispute a partida.</p></div><div class="banner-ball">⚽</div><div class="banner-lines"></div></div>
         <div class="mode-title">ESCOLHA O MODO DE JOGO</div>
         <div class="mode-cards">
-          <div class="mode-card selected"><span class="mode-icon">⚽</span><b>PARTIDA</b><small>RÁPIDA</small></div>
-          <div class="mode-card"><span class="mode-icon">◈</span><b>DESAFIO</b><small>EM BREVE</small></div>
-          <div class="mode-card"><span class="mode-icon">▤</span><b>PLANO</b><small>DE JOGO</small></div>
-          <div class="mode-card"><span class="mode-icon">♛</span><b>MEU</b><small>TIME</small></div>
-          <div class="mode-card"><span class="mode-icon">＋</span><b>CONTRATO</b><small>EM BREVE</small></div>
+          <button type="button" class="mode-card selected" data-mode="match"><span class="mode-icon">⚽</span><b>PARTIDA</b><small>RÁPIDA</small></button><button type="button" class="mode-card" data-mode="challenge"><span class="mode-icon">◈</span><b>DESAFIO</b><small>HABILIDADES</small></button><button type="button" class="mode-card" data-mode="tactics"><span class="mode-icon">▤</span><b>PLANO</b><small>DE JOGO</small></button><button type="button" class="mode-card" data-mode="club"><span class="mode-icon">♛</span><b>MEU</b><small>TIME</small></button><button type="button" class="mode-card" data-mode="market"><span class="mode-icon">＋</span><b>CONTRATO</b><small>ELENCO</small></button>
         </div>
         <div class="match-panel">
           <div class="match-heading"><span>PARTIDA RÁPIDA</span><small>DEFINA O CONFRONTO</small></div>
@@ -58,6 +54,7 @@ html,body{margin:0;min-height:100%;background:#080b68;color:#fff}
           </div>
           <button id="startBtn" class="primary"><span>JOGAR AGORA</span><b>▶</b></button>
         </div>
+        <section id="menuInfoPanel" class="match-panel hidden"></section>
       </div>
     </div>
     <footer class="menu-bottom"><span>MORAIS FOOTBALL <b>•</b> SUA PAIXÃO PELO FUTEBOL</span><span>*Primeiro carregamento exige internet.</span></footer>
