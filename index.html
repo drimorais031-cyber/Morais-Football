@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07110b">
 <meta name="description" content="Morais Football 3D">
 <title>Morais Football</title>
-<link rel="stylesheet" href="style.css?v=landscape-apk-20261124">
+<link rel="stylesheet" href="style.css?v=fullscreen-custom-controls-20261124">
 </head>
 <body>
 <div id="orientationNotice" role="status">
@@ -71,6 +71,18 @@
         <button id="throughBtn" class="through-action">LANÇAMENTO</button>
       </div>
     </div>
+    <button id="openControlSettings" class="control-settings-trigger" aria-label="Configurar controles">⚙ CONTROLES</button>
+    <section id="controlSettings" class="control-settings hidden" role="dialog" aria-modal="true" aria-label="Configuração dos controles">
+      <div class="control-settings-card">
+        <h2>CONFIGURAR CONTROLES</h2>
+        <p id="controlHelp">Ative para arrastar o analógico e os botões. A posição fica salva neste aparelho.</p>
+        <div class="control-settings-actions">
+          <button id="editControlsBtn" type="button">MOVER CONTROLES</button>
+          <button id="resetControlsBtn" type="button">RESTAURAR POSIÇÃO</button>
+          <button id="closeControlSettings" type="button">FECHAR</button>
+        </div>
+      </div>
+    </section>
     <div class="game-footer"><span id="status">Partida em andamento</span><button id="pauseBtn" class="secondary">PAUSAR</button><button id="backBtn" class="secondary">MENU</button></div>
   </section>
 </main>
@@ -89,6 +101,6 @@ tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>x.classList.togg
 modes.forEach(m=>m.addEventListener('click',()=>{modes.forEach(x=>x.classList.toggle('selected',x===m));menuPage(m.dataset.mode)}));
 })();
 </script>
-<script type="module" src="game.js?v=crowd-flags-lights-20261124"></script>
+<script type="module" src="game.js?v=fullscreen-custom-controls-20261124"></script>
 </body>
 </html>
