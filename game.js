@@ -557,7 +557,11 @@ let editorPinch=null,editorDrag=null,editorTarget=null;
 function findEditableControl(target){return target instanceof Element?target.closest('#joystick,#passBtn,#shootBtn,#switchBtn,#sprintBtn,#slideBtn,#throughBtn'):null}
 function editorPointerDown(e){
  if(!controlsEditMode)return;
- const el=findEditableControl(e.target);if(!el)return;
+ let el=findEditableControl(e.target);
+ // Para pinça, o primeiro dedo fica no controle e o segundo pode tocar em qualquer ponto livre da tela.
+ if(!el&&editorTarget&&editorPointers.size===1)el=editorTarget;
+ if(!el)return;
+ if(editorTarget&&editorPointers.size===1&&el!==editorTarget)el=editorTarget;
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
  if(editorTarget&&editorTarget!==el){editorPointers.clear();editorPinch=null;editorDrag=null}
  editorTarget=el;selectedControlId=el.id;
