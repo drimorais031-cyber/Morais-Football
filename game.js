@@ -18,7 +18,7 @@ try {
   return;
 }
 const $=id=>document.getElementById(id), viewport=$('viewport');
-let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,slideTimer=0,keys={},last=0,goalPause=0;
+let scene,camera,renderer,clock3,players=[],ball,active=null,raf=0,running=false,paused=false,seconds=0,score=[0,0],move={x:0,z:0},sprint=false,slideTimer=0,keys={},last=0,goalPause=0,possessionTeam=null,possessionCandidate=null,possessionCandidateTime=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),FIELD_X=48,FIELD_Z=30;
 const formations=[[-21,0],[-14,-10],[-14,-3],[-14,4],[-14,10],[-6,-11],[-6,-4],[-6,4],[-6,11],[1,-5],[1,5]];
 function mat(color,roughness=.8){return new THREE.MeshStandardMaterial({color,roughness})}
@@ -164,7 +164,33 @@ function start(){
  } catch(error) { console.error('Erro ao iniciar partida:',error); running=false; const msg=document.createElement('div');msg.style.cssText='padding:16px;margin:10px;color:#fff;background:#391b1b;border:1px solid #b84b4b;border-radius:10px;font:13px/1.5 Arial';msg.textContent='Não foi possível iniciar a partida 3D: '+error.message;$('loading').style.display='none';viewport.appendChild(msg); }
 }
 function resize(){if(!renderer)return;const w=viewport.clientWidth,h=viewport.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
-function resetGoal(){players.forEach(p=>{p.x=p.homeX;p.z=p.homeZ;p.vx=p.vz=0;p.group.position.set(p.x,0,p.z)});ball.position.set(0,.36,0);ball.userData.vx=ball.userData.vz=ball.userData.vy=0;goalPause=1.2}
+function resetGoal(){players.forEach(p=>{p.x=p.homeX;p.z=p.homeZ;p.vx=p.vz=0;p.group.position.set(p.x,0,p.z)});ball.position.set(0,.36,0);ball.userData.vx=ball.userData.vz=ball.userData.vy=0;possessionTeam=null;possessionCandidate=null;possessionCandidateTime=0;goalPause=1.2}
+function updatePossession(dt){
+ // Considera posse apenas quando um atleta de linha está realmente perto da bola, baixa e sem grande velocidade.
+ if(ball.position.y>1.15||Math.hypot(ball.userData.vx||0,ball.userData.vz||0)>8.5){possessionCandidate=null;possessionCandidateTime=0;return}
+ let closest=null,closestDistance=1.15;
+ for(const p of players){
+  if(p.index===0)continue;
+  const d=Math.hypot(p.x-ball.position.x,p.z-ball.position.z);
+  if(d<closestDistance){closest=p;closestDistance=d}
+ }
+ if(!closest){possessionCandidate=null;possessionCandidateTime=0;return}
+ if(possessionCandidate!==closest.team){possessionCandidate=closest.team;possessionCandidateTime=0}
+ possessionCandidateTime+=dt;
+ if(possessionCandidateTime<.18)return;
+ const previousTeam=possessionTeam;
+ possessionTeam=possessionCandidate;
+ if(previousTeam===1&&possessionTeam===0){
+  let receiver=null,nearestDistance=Infinity;
+  for(const p of players){
+   if(p.team!==0||p.index===0)continue;
+   const d=Math.hypot(p.x-ball.position.x,p.z-ball.position.z);
+   if(d<nearestDistance){receiver=p;nearestDistance=d}
+  }
+  if(receiver&&receiver!==active){if(active)active.ring.visible=false;active=receiver;active.ring.visible=true}
+  $('status').textContent='BOLA RECUPERADA! Controle automático no jogador mais próximo. ⚽';
+ }
+}
 function update(dt){
  seconds+=dt;if(seconds>=180){seconds=180;$('status').textContent='FIM DE JOGO';paused=true}
  $('clock').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(Math.floor(seconds%60)).padStart(2,'0');
@@ -240,6 +266,7 @@ function update(dt){
  const drag=Math.pow(ball.position.y>.37?.996:.986,dt*60);vx*=drag;vz*=drag;
  ball.userData.vx=vx;ball.userData.vz=vz;ball.userData.vy=vy;
  ball.rotation.x+=vz*dt*2;ball.rotation.z-=vx*dt*2;
+ updatePossession(dt);
  if(Math.abs(ball.position.z)>14.5){ball.position.z=clamp(ball.position.z,-14.5,14.5);ball.userData.vz*=-.55}
  if(Math.abs(ball.position.x)>24){
   if(Math.abs(ball.position.z)<3.18&&ball.position.y<2.18&&ball.position.y>.12){
