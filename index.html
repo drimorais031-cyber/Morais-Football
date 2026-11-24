@@ -48,8 +48,16 @@
     <div class="scorebar"><span id="homeLabel">MORAIS FC</span><strong><b id="homeScore">0</b><i>:</i><b id="awayScore">0</b></strong><span id="awayLabel">RIVAIS FC</span><time id="clock">00:00</time></div>
     <div id="viewport" class="viewport"><div id="loading">CARREGANDO ESTÁDIO 3D...</div></div>
     <div class="mobile-controls">
-      <div class="pad"><button data-dir="up" aria-label="Mover para cima">▲</button><div><button data-dir="left" aria-label="Mover para esquerda">◀</button><button data-dir="down" aria-label="Mover para baixo">▼</button><button data-dir="right" aria-label="Mover para direita">▶</button></div></div>
-      <div class="actions"><button id="switchBtn">TROCAR</button><button id="sprintBtn" class="sprint">CORRER</button><button id="passBtn" class="pass-action">PASSE</button><button id="shootBtn" class="shoot-action">CHUTE</button></div>
+      <div class="left-controls">
+        <button id="switchBtn" class="switch-control">TROCAR JOGADOR</button>
+        <div id="joystick" class="joystick" aria-label="Analógico para movimentar o jogador"><div id="stick" class="stick"></div></div>
+      </div>
+      <div class="actions">
+        <button id="throughBtn" class="through-action">LANÇAMENTO</button>
+        <button id="shootBtn" class="shoot-action">CHUTE</button>
+        <button id="passBtn" class="pass-action">PASSE</button>
+        <button id="sprintBtn" class="sprint">CORRER</button>
+      </div>
     </div>
     <div class="game-footer"><span id="status">Partida em andamento</span><button id="pauseBtn" class="secondary">PAUSAR</button><button id="backBtn" class="secondary">MENU</button></div>
   </section>
