@@ -1,16 +1,1 @@
-{
-  "name": "morais-football",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Morais Football Android game",
-  "scripts": {
-    "android": "cap sync android"
-  },
-  "dependencies": {
-    "@capacitor/android": "6.2.0",
-    "@capacitor/core": "6.2.0"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "6.2.0"
-  }
-}
+{"name":"morais-football-3d","version":"1.0.0","private":true,"type":"module","scripts":{"serve":"python -m http.server 8000"}}
