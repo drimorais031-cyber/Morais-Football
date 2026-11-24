@@ -8,7 +8,7 @@ import { Match } from "./match.js?v=mf-v1-4";
 const $=s=>document.querySelector(s);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
 const home=world.players.filter(p=>p.team===0);
-let active=3,charge=0,wasShooting=false,lastSwitch=0,shotPlayer=null;
+let active=3,charge=0,lastSwitch=0,shotPlayer=null;
 const say=message=>{const n=$("#notice");n.textContent=message;clearTimeout(say.timer);say.timer=setTimeout(()=>n.textContent="",1400)};
 const match=new Match(score=>{$("#homeScore").textContent=score.home;$("#awayScore").textContent=score.away;$("#clock").textContent=match.format()},say);
 function select(player){if(!player)return;active=player.id;world.players.forEach(p=>p.ring.visible=p.id===active)}
@@ -79,17 +79,19 @@ function loop(){
   for(const p of world.players)movePlayer(p,dt,input,p.id===active);
   let ballDistance=distance2(controlled.mesh.position,ball.mesh.position);
   const hasBall=ballDistance<2.65&&ball.mesh.position.y<1.65;
-  if(hasBall&&!input.shoot)controlBall(controlled,input,dt);
-  // Carga fica presa ao jogador que iniciou o chute, para o toque de soltar não cancelar a finalização.
-  if(input.shoot&&hasBall){
+  if(hasBall&&!input.shoot&&!input.shootTap)controlBall(controlled,input,dt);
+  // Entradas de toque são armazenadas pelos eventos: um toque rápido não se perde entre frames.
+  if((input.shoot||input.shootTap)&&hasBall){
     if(charge===0)shotPlayer=controlled;
-    if(shotPlayer===controlled)charge=Math.min(100,charge+82*dt);
+    if(shotPlayer===controlled)charge=Math.min(100,charge+(input.shoot?82*dt:18));
   }
-  if(wasShooting&&!input.shoot&&charge>0&&shotPlayer){
+  if(input.shootReleased&&charge>0&&shotPlayer){
     shoot(shotPlayer,THREE.MathUtils.clamp(11+charge*.19,11,30),input);
     charge=0;shotPlayer=null;
+  } else if(input.shootTap&&!input.shoot&&hasBall){
+    shoot(controlled,14,input);
+    charge=0;shotPlayer=null;
   }
-  wasShooting=input.shoot;
   ball.update(dt,world.players,team=>{
     match.goal(team);ball.reset();
     resetKickoff();
@@ -100,6 +102,6 @@ function loop(){
   world.follow(ball.mesh.position,dt);world.render();
 }
 $("#play").onclick=()=>{
-  match.start();charge=0;wasShooting=false;shotPlayer=null;resetKickoff();$("#start").style.display="none";say("BOLA ROLANDO!");
+  match.start();charge=0;shotPlayer=null;resetKickoff();$("#start").style.display="none";say("BOLA ROLANDO!");
 };
 addEventListener("resize",()=>world.resize());world.resize();loop();
