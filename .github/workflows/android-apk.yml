@@ -1,12 +1,12 @@
-name: Build Morais Football APK
+name: Build Morais Football V1.0 APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, v1-modular-3d]
     paths:
       - 'index.html'
       - 'style.css'
-      - 'game.js'
+      - 'src/**'
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/android-apk.yml'
@@ -16,22 +16,20 @@ jobs:
   build-apk:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Prepare web assets
+      - name: Validate and prepare web assets
         run: |
-          node --check game.js
+          for f in src/*.js; do node --check "$f"; done
           mkdir -p www
-          cp index.html style.css game.js www/
+          cp index.html style.css www/
+          cp -r src www/src
       - name: Install Capacitor and generate Android project
         run: |
           npm install
@@ -46,19 +44,17 @@ jobs:
           s=p.read_text()
           s,n=re.subn(r'(<activity[^>]*android:name="[^"]*MainActivity"[^>]*)>',r'\1 android:screenOrientation="landscape">',s,count=1)
           if n != 1:
-              raise SystemExit('Não foi possível localizar a MainActivity para travar a orientação horizontal.')
+              raise SystemExit('Não foi possível configurar a orientação horizontal.')
           p.write_text(s)
-          print('MainActivity configurada em landscape.')
           PY
       - name: Build debug APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: Morais-Football-APK
+          name: Morais-Football-V1.0-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
