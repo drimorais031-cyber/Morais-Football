@@ -138,3 +138,5 @@ button{border:0;border-radius:9px;font-weight:900;letter-spacing:.7px;cursor:poi
  .primary{padding:8px;margin-top:5px}
  .menu-bottom{padding-top:4px}
 }
+
+.menu-tabs button{padding:7px 17px;border:0;border-radius:24px;background:transparent;color:#c8d2ff;font-size:8px;font-weight:900}.menu-tabs button.active{background:#ffe500;color:#10136b}.mode-card{border:0;cursor:pointer;font-family:inherit}#menuInfoPanel h2{margin:0 0 8px;color:#ffe500;font-size:17px}#menuInfoPanel p{margin:6px 0;color:#e0e7ff;font-size:12px;line-height:1.5}#menuInfoPanel button{margin-top:10px;padding:10px 16px;background:#ffe500;color:#10145f}
