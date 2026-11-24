@@ -251,14 +251,10 @@ function selectPlayer(){
 function kick(type){
  if(!running||paused||goalPause>0||!active||!ball)return;
  const now=performance.now();if(now-lastKick<260)return;
- // Usa quem realmente está junto da bola, sem permitir passe de um atleta distante.
- let carrier=active;
- let distance=Math.hypot(carrier.x-ball.position.x,carrier.z-ball.position.z);
+ let carrier=active,distance=Math.hypot(carrier.x-ball.position.x,carrier.z-ball.position.z);
  if(distance>3.2){
-  const closest=players.filter(p=>p.team===0&&p.index!==0)
-   .map(p=>({p,d:Math.hypot(p.x-ball.position.x,p.z-ball.position.z)}))
-   .sort((a,b)=>a.d-b.d)[0];
-  if(closest&&closest.d<distance){if(active)active.ring.visible=false;active=carrier=closest.p;active.ring.visible=true;distance=closest.d}
+  const nearestPlayer=players.filter(p=>p.team===0&&p.index!==0).map(p=>({p,d:Math.hypot(p.x-ball.position.x,p.z-ball.position.z)})).sort((a,b)=>a.d-b.d)[0];
+  if(nearestPlayer&&nearestPlayer.d<distance){if(active)active.ring.visible=false;active=carrier=nearestPlayer.p;active.ring.visible=true;distance=nearestPlayer.d}
  }
  if(distance>4.2){$('status').textContent='Aproxime o jogador da bola para executar';return}
  lastKick=now;
@@ -266,74 +262,57 @@ function kick(type){
  const teammates=players.filter(p=>p.team===carrier.team&&p!==carrier&&p.index!==0);
  const rivals=players.filter(p=>p.team!==carrier.team&&p.index!==0);
  const facing=carrier.group.rotation.y;
- const launchX=carrier.x+Math.sin(facing)*.78;
- const launchZ=carrier.z+Math.cos(facing)*.78;
- ball.position.set(launchX,.39,launchZ);
- let receiver=null,targetX=0,targetZ=0,power=0,vertical=.55;
+ const launchX=carrier.x+Math.sin(facing)*.76,launchZ=carrier.z+Math.cos(facing)*.76;
+ ball.position.set(launchX,.37,launchZ);
+ let receiver=null,dx=attackDir,dz=0,power=0,vertical=0;
  if((type==='pass'||type==='through')&&teammates.length){
-  const scored=teammates.map(p=>{
-   const dx=(p.x-carrier.x)*attackDir,dz=p.z-carrier.z;
-   const dist=Math.hypot(dx,dz);
-   const nearestRival=rivals.reduce((best,r)=>Math.min(best,Math.hypot(r.x-p.x,r.z-p.z)),99);
-   const forward=dx;
-   let score=0;
+  const options=teammates.map(p=>{
+   const forward=(p.x-carrier.x)*attackDir,side=p.z-carrier.z,dist=Math.hypot(forward,side);
+   const pressure=rivals.reduce((m,r)=>Math.min(m,Math.hypot(r.x-p.x,r.z-p.z)),99);
+   let score;
    if(type==='pass'){
-    // Passe curto/médio: prioriza linha de passe segura, opção próxima e avanço moderado.
-    score+=Math.max(-7,Math.min(7,forward))*.62;
-    score-=Math.abs(dist-7.2)*.72;
-    score+=Math.min(nearestRival,8)*.78;
-    if(forward< -2)score-=5;
-    if(dist>17)score-=7;
+    score= -Math.abs(dist-7)*.9 + Math.max(-4,Math.min(6,forward))*.45 + Math.min(pressure,8)*.8;
+    if(forward< -2)score-=5;if(dist>16)score-=8;
    }else{
-    // Lançamento: precisa atacar o espaço à frente, não apenas escolher o mais avançado.
-    score+=forward*1.05;
-    score-=Math.max(0,dist-16)*.9;
-    score+=Math.min(nearestRival,10)*.62;
-    if(forward<2.2)score-=14;
-    if(dist<3.5)score-=5;
-    if(dist>21)score-=10;
+    score=forward*1.05-Math.max(0,dist-18)*.8+Math.min(pressure,10)*.6;
+    if(forward<2)score-=15;if(dist<4)score-=5;if(dist>23)score-=9;
    }
-   // Evita duas opções praticamente na mesma linha e favorece corredores livres.
-   score+=Math.min(Math.abs(dz),6)*.18;
    return {p,score,forward,dist};
-  }).sort((a,b)=>b.score-a.score);
-  const choice=scored[0];
-  if(choice&&(type==='pass'||choice.forward>1.2)){
+  }).sort((x,y)=>y.score-x.score);
+  const choice=options[0];
+  if(choice&&(type==='pass'||choice.forward>1.5)){
    receiver=choice.p;
-   const lead=type==='through'?clamp(2.0+choice.dist*.13,2.2,4.8):clamp(choice.dist*.035,.15,.65);
-   targetX=receiver.x+attackDir*lead;
-   targetZ=receiver.z+clamp(receiver.vz*.24,-1.4,1.4);
-   targetX=clamp(targetX,-22.8,22.8);targetZ=clamp(targetZ,-13.2,13.2);
-   const dx=targetX-launchX,dz=targetZ-launchZ,travel=Math.hypot(dx,dz);
+   const lead=type==='through'?clamp(2.2+choice.dist*.12,2.2,4.5):.25;
+   const targetX=clamp(receiver.x+attackDir*lead+receiver.vx*.18,-22.5,22.5);
+   const targetZ=clamp(receiver.z+receiver.vz*.18,-13.2,13.2);
+   dx=targetX-launchX;dz=targetZ-launchZ;
+   const travel=Math.hypot(dx,dz);
    if(type==='pass'){
-    // Passe rasteiro, firme, com pequena elevação para não prender no gramado.
-    const travelTime=clamp(.42+travel*.035,.52,.95);
-    power=clamp(travel/travelTime,8.5,19);
-    vertical=.62;
+    // Passe rasteiro: calcula a velocidade pelo atrito real do gramado para não atravessar o receptor.
+    power=clamp(Math.sqrt(2*1.75*Math.max(1,travel))*1.08,5.2,15.5);
+    vertical=.12;
    }else{
-    // Bola levantada no espaço à frente do atacante.
-    const travelTime=clamp(.62+travel*.035,.82,1.28);
-    power=clamp(travel/travelTime,12,22);
-    vertical=clamp(4.9*travelTime,4.0,6.2);
+    // Lançamento: define o tempo de voo e a altura para a bola cair perto do espaço indicado.
+    const flightTime=clamp(travel/14.5,.72,1.38);
+    power=clamp(travel/flightTime,10,20);
+    vertical=4.9*flightTime;
    }
    const len=Math.hypot(dx,dz)||1;
-   ball.userData.vx=dx/len*power+carrier.vx*.16;
-   ball.userData.vz=dz/len*power+carrier.vz*.16;
+   ball.userData.vx=dx/len*power+carrier.vx*.12;
+   ball.userData.vz=dz/len*power+carrier.vz*.12;
    ball.userData.vy=vertical;
    if(active)active.ring.visible=false;active=receiver;active.ring.visible=true;
-   $('status').textContent=type==='through'?'LANÇAMENTO NO ESPAÇO! ⚽':'PASSE DIRECIONADO! ⚽';
+   $('status').textContent=type==='through'?'LANÇAMENTO NO ESPAÇO! ⚽':'PASSE RASTEIRO! ⚽';
    return;
   }
-  if(type==='through'){$('status').textContent='NÃO HÁ COMPANHEIRO EM CONDIÇÃO DE RECEBER O LANÇAMENTO';return}
+  if(type==='through'){$('status').textContent='NÃO HÁ ESPAÇO PARA O LANÇAMENTO';return}
  }
  if(type==='shoot'){
-  const goalX=carrier.team===0?24:-24;
-  const keeper=players.find(p=>p.team!==carrier.team&&p.index===0);
+  const goalX=carrier.team===0?24:-24,keeper=players.find(p=>p.team!==carrier.team&&p.index===0);
   const targetZ=clamp((keeper?keeper.z:0)*.18,-2.65,2.65);
-  const dx=goalX-launchX,dz=targetZ-launchZ,len=Math.hypot(dx,dz)||1;
-  ball.userData.vx=dx/len*26+carrier.vx*.18;
-  ball.userData.vz=dz/len*26+carrier.vz*.18;
-  ball.userData.vy=4.0;$('status').textContent='CHUTE! ⚽';
+  dx=goalX-launchX;dz=targetZ-launchZ;const len=Math.hypot(dx,dz)||1;
+  ball.userData.vx=dx/len*25+carrier.vx*.12;ball.userData.vz=dz/len*25+carrier.vz*.12;ball.userData.vy=3.7;
+  $('status').textContent='CHUTE! ⚽';
  }
 }
 function slideTackle(){
@@ -519,14 +498,14 @@ function update(dt){
   const facing=active.group.rotation.y;
   const targetX=active.x+Math.sin(facing)*(hasInput?.88:.7);
   const targetZ=active.z+Math.cos(facing)*(hasInput?.88:.7);
-  const follow=Math.min(1,dt*(hasInput?22:17));
+  const follow=Math.min(1,dt*(hasInput?15:11));
   ball.position.x+=(targetX-ball.position.x)*follow;
   ball.position.z+=(targetZ-ball.position.z)*follow;
   vx=active.vx*.98;vz=active.vz*.98;vy=0;
  }
  // Colisão física com os demais atletas. O jogador controlado não chuta a bola para longe ao dominá-la.
  for(const p of players){
-  if(p===active&&controlDistance<2.0&&ballSpeed<12.5)continue;
+  if(p===active&&controlDistance<1.28&&ballSpeed<7.2)continue;
   const dx=ball.position.x-p.x,dz=ball.position.z-p.z,dist=Math.hypot(dx,dz);
   if(dist>.001&&dist<.66&&ball.position.y<1.15){
    const nx=dx/dist,nz=dz/dist;
@@ -540,8 +519,14 @@ function update(dt){
  ball.position.x+=vx*dt;ball.position.z+=vz*dt;vy-=9.8*dt;ball.position.y+=vy*dt;
  ball.userData.shadow.position.set(ball.position.x,.018,ball.position.z);
  ball.userData.shadow.scale.setScalar(clamp(1-(ball.position.y-.36)*.22,.55,1));
- if(ball.position.y<.36){ball.position.y=.36;if(vy<-.9)vy=-vy*.24;else vy=0}
- const drag=Math.pow(ball.position.y>.37?.996:.986,dt*60);vx*=drag;vz*=drag;
+ if(ball.position.y<.36){ball.position.y=.36;if(vy<-1.05)vy=-vy*.34;else vy=0}
+ if(ball.position.y<=.371&&Math.abs(vy)<.35){
+  // Atrito constante no gramado: desacelera de forma previsível e respeita a distância do passe.
+  const horizontal=Math.hypot(vx,vz),loss=1.75*dt;
+  if(horizontal<=loss){vx=0;vz=0}else{const factor=(horizontal-loss)/horizontal;vx*=factor;vz*=factor}
+ }else{
+  const airDrag=Math.exp(-.10*dt);vx*=airDrag;vz*=airDrag;
+ }
  ball.userData.vx=vx;ball.userData.vz=vz;ball.userData.vy=vy;
  ball.rotation.x+=vz*dt*2;ball.rotation.z-=vx*dt*2;
  updatePossession(dt);
