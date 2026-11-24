@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js";
-import { BallPhysics } from "./physics.js";
-import { Controls } from "./controls.js";
-import { updateAI, updateGoalkeepers } from "./ai.js";
-import { Match } from "./match.js";
+import { createScene } from "./scene.js?v=mf-v1-2";
+import { BallPhysics } from "./physics.js?v=mf-v1-2";
+import { Controls } from "./controls.js?v=mf-v1-2";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-2";
+import { Match } from "./match.js?v=mf-v1-2";
 
 const $ = selector => document.querySelector(selector);
 const world = createScene();
