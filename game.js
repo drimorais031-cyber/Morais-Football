@@ -50,7 +50,7 @@ function makePlayer(team,index,x,z){
 }
 function buildPitch(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0x9fc4d5);scene.fog=new THREE.Fog(0x9fc4d5,55,105);
- camera=new THREE.PerspectiveCamera(48,1,.1,180);camera.position.set(0,39,27);camera.lookAt(0,0,0);
+ camera=new THREE.PerspectiveCamera(48,1,.1,180);camera.position.set(0,32,22);camera.lookAt(0,0,0);
  renderer=new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;viewport.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight(0xe8f4ff,0x31502b,2.0));
  const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-12,28,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
@@ -422,7 +422,7 @@ function loop(t){
  // Câmera acompanha a jogada para manter a ação no centro da tela.
  if(active&&ball){
   const tx=active.x*.42+ball.position.x*.58,tz=active.z*.42+ball.position.z*.58;
-  const desired=new THREE.Vector3(tx,39,tz+27);
+  const desired=new THREE.Vector3(tx,32,tz+22);
   camera.position.lerp(desired,Math.min(1,dt*1.8));
   camera.lookAt(tx,0,tz);
  }
@@ -473,5 +473,48 @@ window.addEventListener('blur',()=>{sprint=false;sprintPointer=null;move={x:0,z:
 document.addEventListener('visibilitychange',()=>{if(document.hidden){sprint=false;sprintPointer=null;move={x:0,z:0};sprintBtn.classList.remove('pressed')}});
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='ArrowUp'||e.key==='w')move.z=-1;if(e.key==='ArrowDown'||e.key==='s')move.z=1;if(e.key==='ArrowLeft'||e.key==='a')move.x=-1;if(e.key==='ArrowRight'||e.key==='d')move.x=1;if(e.key===' ')kick('shoot');if(e.key.toLowerCase()==='x')kick('pass')});
 window.addEventListener('keyup',e=>{keys[e.key]=false;if(['ArrowUp','w','ArrowDown','s'].includes(e.key))move.z=0;if(['ArrowLeft','a','ArrowRight','d'].includes(e.key))move.x=0});
+
+/* Configuração e posicionamento livre dos controles */
+const controlSettings=$('controlSettings'),editControlsBtn=$('editControlsBtn'),resetControlsBtn=$('resetControlsBtn'),closeControlSettings=$('closeControlSettings'),openControlSettings=$('openControlSettings');
+let controlsEditMode=false,dragControl=null;
+const movableControls=[['joystick', 'joystick'],['passBtn','action'],['shootBtn','action'],['switchBtn','action'],['sprintBtn','action'],['slideBtn','action'],['throughBtn','action']];
+function controlElements(){return movableControls.map(([id])=>$(id)).filter(Boolean)}
+function saveControlPositions(){
+ const data={};controlElements().forEach(el=>{if(el.dataset.customPosition==='1'){const r=el.getBoundingClientRect();data[el.id]={x:r.left/innerWidth,y:r.top/innerHeight}}});
+ try{localStorage.setItem('moraisFootballControls',JSON.stringify(data))}catch(e){}
+}
+function applyControlPositions(){
+ let data={};try{data=JSON.parse(localStorage.getItem('moraisFootballControls')||'{}')}catch(e){}
+ Object.entries(data).forEach(([id,p])=>{const el=$(id);if(!el||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;el.style.position='fixed';el.style.left=(p.x*innerWidth)+'px';el.style.top=(p.y*innerHeight)+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1'});
+}
+function setControlsEditMode(enabled){
+ controlsEditMode=enabled;
+ $('game').classList.toggle('editing-controls',enabled);
+ editControlsBtn.textContent=enabled?'CONCLUIR POSIÇÃO':'MOVER CONTROLES';
+ $('controlHelp').textContent=enabled?'Arraste o analógico e cada botão para qualquer lugar da tela. Toque em CONCLUIR POSIÇÃO para salvar.':'Ative para arrastar o analógico e os botões. A posição fica salva neste aparelho.';
+}
+function openControlsSettings(){controlSettings.classList.remove('hidden');setControlsEditMode(false)}
+openControlSettings.addEventListener('click',openControlsSettings);
+closeControlSettings.addEventListener('click',()=>{setControlsEditMode(false);controlSettings.classList.add('hidden')});
+editControlsBtn.addEventListener('click',()=>{setControlsEditMode(!controlsEditMode);if(!controlsEditMode)saveControlPositions()});
+resetControlsBtn.addEventListener('click',()=>{try{localStorage.removeItem('moraisFootballControls')}catch(e){}controlElements().forEach(el=>{el.style.position='';el.style.left='';el.style.top='';el.style.right='';el.style.bottom='';el.style.margin='';delete el.dataset.customPosition});setControlsEditMode(false)});
+controlElements().forEach(el=>{
+ el.addEventListener('pointerdown',e=>{
+  if(!controlsEditMode)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const r=el.getBoundingClientRect();dragControl={el,id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};
+  el.setPointerCapture?.(e.pointerId);
+ },true);
+ el.addEventListener('pointermove',e=>{
+  if(!dragControl||dragControl.el!==el||dragControl.id!==e.pointerId)return;
+  e.preventDefault();
+  const x=clamp(e.clientX-dragControl.dx,0,innerWidth-el.offsetWidth),y=clamp(e.clientY-dragControl.dy,0,innerHeight-el.offsetHeight);
+  el.style.position='fixed';el.style.left=x+'px';el.style.top=y+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1';
+ },true);
+ const finish=e=>{if(dragControl&&dragControl.el===el&&dragControl.id===e.pointerId){dragControl=null;saveControlPositions()}};
+ ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,finish,true));
+});
+applyControlPositions();
+
 window.addEventListener('resize',()=>{requestAnimationFrame(resize)});window.addEventListener('orientationchange',()=>{setTimeout(()=>{resize();if(running&&renderer){renderer.domElement.style.display='block';}},180)});if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(resize));document.addEventListener('visibilitychange',()=>{if(document.hidden)paused=true});
 })();
