@@ -338,3 +338,14 @@ button{border:0;border-radius:9px;font-weight:900;letter-spacing:.7px;cursor:poi
 #game.editing-controls .mobile-controls .actions button,
 #game.editing-controls .mobile-controls .joystick{cursor:move!important;will-change:transform,left,top}
 #game.editing-controls .mobile-controls .actions button{border:2px dashed rgba(255,255,255,.95)!important;}
+
+
+/* Multitoque real: impede gestos do navegador de cancelar o toque simultaneo nos comandos. */
+#game:not(.hidden) .mobile-controls,
+#game:not(.hidden) .mobile-controls .joystick,
+#game:not(.hidden) .mobile-controls .actions,
+#game:not(.hidden) .mobile-controls .actions button{
+ touch-action:none!important;
+ -webkit-user-select:none!important;
+ user-select:none!important;
+}
