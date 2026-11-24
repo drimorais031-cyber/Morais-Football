@@ -1,17 +1,253 @@
-import * as THREE from "three";import {createScene} from "./scene.js";import {BallPhysics} from "./physics.js";import {Controls} from "./controls.js";import {updateAI,updateGoalkeepers} from "./ai.js";import {Match} from "./match.js";
-const $=s=>document.querySelector(s),world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();let active=1,charge=0,wasShooting=false;
-const say=t=>{const n=$("#notice");n.textContent=t;clearTimeout(say.timer);say.timer=setTimeout(()=>n.textContent="",1400)};
-const match=new Match(s=>{$("#homeScore").textContent=s.home;$("#awayScore").textContent=s.away;$("#clock").textContent=match.format()},say),home=world.players.filter(p=>p.team===0);
-function select(p){active=p.id;world.players.forEach(q=>q.ring.visible=q.id===active)}select(home[1]);
-function nearest(){return home.filter(p=>p.role!=="GK").sort((a,b)=>Math.hypot(a.mesh.position.x-ball.mesh.position.x,a.mesh.position.z-ball.mesh.position.z)-Math.hypot(b.mesh.position.x-ball.mesh.position.x,b.mesh.position.z-ball.mesh.position.z))[0]}
-function hasBall(){return home.some(p=>Math.hypot(p.mesh.position.x-ball.mesh.position.x,p.mesh.position.z-ball.mesh.position.z)<2)}
-function receiver(p,long){return home.filter(q=>q!==p&&q.role!=="GK").sort((a,b)=>{const score=q=>Math.hypot(q.mesh.position.x-p.mesh.position.x,q.mesh.position.z-p.mesh.position.z)-(long?(q.mesh.position.x-p.mesh.position.x)*.9:0);return score(a)-score(b)})[0]}
-function pass(p,long){const r=receiver(p,long);if(!r)return;const dx=r.mesh.position.x-p.mesh.position.x,dz=r.mesh.position.z-p.mesh.position.z,d=Math.hypot(dx,dz)||1;ball.reset(p.mesh.position.x+dx/d,p.mesh.position.z+dz/d);ball.kick({x:dx,z:dz},long?Math.min(23,13+d*.13):Math.min(15,8+d*.12),long?4.8:1.1,p.id);select(r)}
-function shoot(p,power){const dx=50-p.mesh.position.x,dz=-p.mesh.position.z+(Math.random()-.5)*2;ball.reset(p.mesh.position.x+Math.sign(dx),p.mesh.position.z);ball.kick({x:dx,z:dz},power,.9+power*.22,p.id)}
-function playerMove(p,dt,m,controlled){if(controlled){const sprint=m.sprint&&p.stamina>1&&Math.hypot(m.x,m.z)>.1,speed=sprint?10.5:6.8;p.stamina=THREE.MathUtils.clamp(p.stamina+(sprint?-27:13)*dt,0,100);p.velocity.x+=(m.x*speed-p.velocity.x)*Math.min(1,dt*11);p.velocity.z+=(m.z*speed-p.velocity.z)*Math.min(1,dt*11)}p.mesh.position.x=THREE.MathUtils.clamp(p.mesh.position.x+p.velocity.x*dt,-48,48);p.mesh.position.z=THREE.MathUtils.clamp(p.mesh.position.z+p.velocity.z*dt,-30,30);if(Math.hypot(p.velocity.x,p.velocity.z)>.2)p.mesh.rotation.y=Math.atan2(p.velocity.x,p.velocity.z)}
-function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.033);if(!match.running){world.render();return}if(match.paused){world.render();return}match.update(dt);const m=controls.read(),p=world.players[active];if(m.switch)select(nearest());let controlled=world.players[active];const homePoss=hasBall();if(!homePoss){const candidate=nearest();const cd=Math.hypot(candidate.mesh.position.x-ball.mesh.position.x,candidate.mesh.position.z-ball.mesh.position.z),ad=Math.hypot(controlled.mesh.position.x-ball.mesh.position.x,controlled.mesh.position.z-ball.mesh.position.z);if(cd+1.5<ad)select(candidate)}controlled=world.players[active];updateAI(world.players,ball.mesh.position,dt,active,homePoss);updateGoalkeepers(world.players,ball.mesh.position,dt);
-for(const q of world.players)if(q.id===active)playerMove(q,dt,m,true);else playerMove(q,dt,m,false);
-const d=Math.hypot(controlled.mesh.position.x-ball.mesh.position.x,controlled.mesh.position.z-ball.mesh.position.z);if(d<1.65&&ball.mesh.position.y<1.3){const n=Math.hypot(m.x,m.z)||1,dx=m.x/n,dz=m.z/n;ball.mesh.position.x+=(controlled.mesh.position.x+dx-ball.mesh.position.x)*.34;ball.mesh.position.z+=(controlled.mesh.position.z+dz-ball.mesh.position.z)*.34;ball.mesh.position.y=.42;ball.v.x=controlled.velocity.x*.8;ball.v.z=controlled.velocity.z*.8;if(m.pass)pass(controlled,false);if(m.through)pass(controlled,true)}
-if(m.shoot&&d<2.1)charge=Math.min(100,charge+65*dt);if(wasShooting&&!m.shoot&&charge>0&&d<2.5){shoot(controlled,10+charge*.12);charge=0}wasShooting=m.shoot;if(d>2.2&&m.pass)select(nearest());
-ball.update(dt,world.players,t=>{match.goal(t);ball.reset();world.players.forEach(q=>{q.mesh.position.set(q.home.x,0,q.home.z);q.velocity={x:0,z:0}})});$("#power").style.width=charge+"%";$("#stamina").style.width=controlled.stamina+"%";world.follow(ball.mesh.position,dt);world.render()}
-$("#play").onclick=()=>{match.start();ball.reset();world.players.forEach(p=>{p.mesh.position.set(p.home.x,0,p.home.z);p.velocity={x:0,z:0}});select(home[1]);$("#start").style.display="none";say("BOLA ROLANDO!")};addEventListener("resize",()=>world.resize());world.resize();loop();
+import * as THREE from "three";
+import { createScene } from "./scene.js";
+import { BallPhysics } from "./physics.js";
+import { Controls } from "./controls.js";
+import { updateAI, updateGoalkeepers } from "./ai.js";
+import { Match } from "./match.js";
+
+const $ = selector => document.querySelector(selector);
+const world = createScene();
+const controls = new Controls();
+const ball = new BallPhysics(world.ball);
+const clock = new THREE.Clock();
+const home = world.players.filter(p => p.team === 0);
+let active = 1;
+let charge = 0;
+let wasShooting = false;
+let lastSwitch = 0;
+
+const say = message => {
+  const notice = $("#notice");
+  notice.textContent = message;
+  clearTimeout(say.timer);
+  say.timer = setTimeout(() => notice.textContent = "", 1400);
+};
+
+const match = new Match(score => {
+  $("#homeScore").textContent = score.home;
+  $("#awayScore").textContent = score.away;
+  $("#clock").textContent = match.format();
+}, say);
+
+function select(player) {
+  if (!player) return;
+  active = player.id;
+  world.players.forEach(p => p.ring.visible = p.id === active);
+}
+
+function nearestTeammate() {
+  return home.filter(p => p.role !== "GK").sort((a, b) =>
+    distance2(a.mesh.position, ball.mesh.position) -
+    distance2(b.mesh.position, ball.mesh.position)
+  )[0];
+}
+
+function distance2(a, b) {
+  return Math.hypot(a.x - b.x, a.z - b.z);
+}
+
+function teamHasPossession() {
+  return home.some(p => distance2(p.mesh.position, ball.mesh.position) < 2.05);
+}
+
+function chooseReceiver(player, longPass, aim) {
+  const candidates = home.filter(p => p !== player && p.role !== "GK");
+  if (!candidates.length) return null;
+
+  const aimLength = Math.hypot(aim.x, aim.z);
+  const aimX = aimLength > .15 ? aim.x / aimLength : 1;
+  const aimZ = aimLength > .15 ? aim.z / aimLength : 0;
+
+  return candidates.sort((a, b) => {
+    const score = target => {
+      const dx = target.mesh.position.x - player.mesh.position.x;
+      const dz = target.mesh.position.z - player.mesh.position.z;
+      const length = Math.hypot(dx, dz) || 1;
+      const directionMatch = (dx / length) * aimX + (dz / length) * aimZ;
+      const forward = dx * (longPass ? 1.15 : .45);
+      const distancePenalty = length * (longPass ? .34 : .68);
+      const crowdPenalty = world.players
+        .filter(q => q.team === 1)
+        .reduce((sum, rival) => sum + (distance2(rival.mesh.position, target.mesh.position) < 3.5 ? 1.8 : 0), 0);
+      return distancePenalty - directionMatch * 5 - forward * .12 + crowdPenalty;
+    };
+    return score(a) - score(b);
+  })[0];
+}
+
+function pass(player, longPass, aim) {
+  const receiver = chooseReceiver(player, longPass, aim);
+  if (!receiver) return;
+
+  const dx = receiver.mesh.position.x - player.mesh.position.x;
+  const dz = receiver.mesh.position.z - player.mesh.position.z;
+  const length = Math.hypot(dx, dz) || 1;
+  const direction = { x: dx / length, z: dz / length };
+  const power = longPass
+    ? THREE.MathUtils.clamp(12 + length * .22, 14, 23)
+    : THREE.MathUtils.clamp(7.5 + length * .22, 8.5, 15);
+
+  ball.reset(player.mesh.position.x + direction.x * .85, player.mesh.position.z + direction.z * .85);
+  ball.kick(direction, power, longPass ? 3.2 : .35, player.id);
+  select(receiver);
+}
+
+function shoot(player, power, aim) {
+  const goalDirection = { x: 50 - player.mesh.position.x, z: -player.mesh.position.z };
+  const aimLength = Math.hypot(aim.x, aim.z);
+  if (aimLength > .2) {
+    goalDirection.z += (aim.z / aimLength) * 8;
+    goalDirection.x += (aim.x / aimLength) * 3;
+  }
+  const directionLength = Math.hypot(goalDirection.x, goalDirection.z) || 1;
+  const direction = {
+    x: goalDirection.x / directionLength,
+    z: goalDirection.z / directionLength
+  };
+  ball.reset(player.mesh.position.x + direction.x * .9, player.mesh.position.z + direction.z * .9);
+  ball.kick(direction, power, 1.1 + power * .2, player.id);
+}
+
+function movePlayer(player, dt, input, controlled) {
+  if (controlled) {
+    const moving = Math.hypot(input.x, input.z) > .08;
+    const sprinting = input.sprint && player.stamina > 1 && moving;
+    const speed = sprinting ? 10.2 : 6.4;
+    player.stamina = THREE.MathUtils.clamp(
+      player.stamina + (sprinting ? -25 : 15) * dt, 0, 100
+    );
+
+    const response = 1 - Math.exp(-12 * dt);
+    player.velocity.x += (input.x * speed - player.velocity.x) * response;
+    player.velocity.z += (input.z * speed - player.velocity.z) * response;
+  }
+
+  const p = player.mesh.position;
+  p.x = THREE.MathUtils.clamp(p.x + player.velocity.x * dt, -48, 48);
+  p.z = THREE.MathUtils.clamp(p.z + player.velocity.z * dt, -30, 30);
+
+  const speed = Math.hypot(player.velocity.x, player.velocity.z);
+  if (speed > .25) player.mesh.rotation.y = Math.atan2(player.velocity.x, player.velocity.z);
+  if (!controlled) {
+    player.velocity.x *= Math.exp(-1.5 * dt);
+    player.velocity.z *= Math.exp(-1.5 * dt);
+  }
+}
+
+function controlBall(player, input, dt) {
+  const velocity = player.velocity;
+  let forwardX = input.x;
+  let forwardZ = input.z;
+  let forwardLength = Math.hypot(forwardX, forwardZ);
+
+  if (forwardLength < .12) {
+    forwardX = velocity.x;
+    forwardZ = velocity.z;
+    forwardLength = Math.hypot(forwardX, forwardZ);
+  }
+  if (forwardLength < .12) {
+    forwardX = player.team === 0 ? 1 : -1;
+    forwardZ = 0;
+    forwardLength = 1;
+  }
+
+  forwardX /= forwardLength;
+  forwardZ /= forwardLength;
+
+  const targetX = player.mesh.position.x + forwardX * .95;
+  const targetZ = player.mesh.position.z + forwardZ * .95;
+  const blend = 1 - Math.exp(-13 * dt);
+
+  ball.mesh.position.x += (targetX - ball.mesh.position.x) * blend;
+  ball.mesh.position.z += (targetZ - ball.mesh.position.z) * blend;
+  ball.mesh.position.y = .42;
+  ball.v.x = velocity.x * .78;
+  ball.v.z = velocity.z * .78;
+
+  if (input.pass) pass(player, false, input);
+  if (input.through) pass(player, true, input);
+}
+
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), .033);
+
+  if (!match.running || match.paused) {
+    world.render();
+    return;
+  }
+
+  match.update(dt);
+  const input = controls.read();
+  let controlled = world.players[active];
+
+  if (input.switch && performance.now() - lastSwitch > 220) {
+    select(nearestTeammate());
+    lastSwitch = performance.now();
+    controlled = world.players[active];
+  }
+
+  const homePossession = teamHasPossession();
+  if (!homePossession) {
+    const closest = nearestTeammate();
+    if (closest && distance2(closest.mesh.position, ball.mesh.position) + 1.25 <
+        distance2(controlled.mesh.position, ball.mesh.position)) {
+      select(closest);
+      controlled = world.players[active];
+    }
+  }
+
+  updateAI(world.players, ball.mesh.position, dt, active, homePossession);
+  updateGoalkeepers(world.players, ball.mesh.position, dt);
+
+  for (const player of world.players) {
+    movePlayer(player, dt, input, player.id === active);
+  }
+
+  const ballDistance = distance2(controlled.mesh.position, ball.mesh.position);
+  if (ballDistance < 1.75 && ball.mesh.position.y < 1.35) {
+    controlBall(controlled, input, dt);
+  }
+
+  const closeEnoughToShoot = ballDistance < 2.2 && ball.mesh.position.y < 1.5;
+  if (input.shoot && closeEnoughToShoot) {
+    charge = Math.min(100, charge + 72 * dt);
+  }
+  if (wasShooting && !input.shoot && charge > 0 && closeEnoughToShoot) {
+    shoot(controlled, 10 + charge * .13, input);
+    charge = 0;
+  }
+  wasShooting = input.shoot;
+
+  ball.update(dt, world.players, scoringTeam => {
+    match.goal(scoringTeam);
+    ball.reset();
+    world.players.forEach(player => {
+      player.mesh.position.set(player.home.x, 0, player.home.z);
+      player.velocity = { x: 0, z: 0 };
+    });
+    select(home[1]);
+  });
+
+  $("#power").style.width = charge + "%";
+  $("#stamina").style.width = controlled.stamina + "%";
+  world.follow(ball.mesh.position, dt);
+  world.render();
+}
+
+$("#play").onclick = () => {
+  match.start();
+  ball.reset();
+  world.players.forEach(player => {
+    player.mesh.position.set(player.home.x, 0, player.home.z);
+    player.velocity = { x: 0, z: 0 };
+    player.stamina = 100;
+  });
+  select(home[1]);
+  $("#start").style.display = "none";
+  say("BOLA ROLANDO!");
+};
+
+addEventListener("resize", () => world.resize());
+world.resize();
+loop();
