@@ -249,47 +249,58 @@ function selectPlayer(){
  $('status').textContent='Controle: jogador mais próximo da bola';
 }
 function kick(type){
- if(!running||paused||goalPause>0||!active)return;
- const now=performance.now();if(now-lastKick<260)return;
- const contactDistance=Math.hypot(active.x-ball.position.x,active.z-ball.position.z);
- if(contactDistance>3.15){$('status').textContent='Chegue mais perto da bola para jogar';return}
+ if(!running||paused||goalPause>0||!active||!ball)return;
+ const now=performance.now();if(now-lastKick<220)return;
+ // Se o jogador selecionado ficou longe, usa automaticamente o atleta mais próximo da bola.
+ let carrier=active;
+ let distance=Math.hypot(carrier.x-ball.position.x,carrier.z-ball.position.z);
+ if(distance>3.6){
+  const closest=players.filter(p=>p.team===0&&p.index!==0)
+   .sort((a,b)=>Math.hypot(a.x-ball.position.x,a.z-ball.position.z)-Math.hypot(b.x-ball.position.x,b.z-ball.position.z))[0];
+  if(closest){
+   const d=Math.hypot(closest.x-ball.position.x,closest.z-ball.position.z);
+   if(d<distance){if(active)active.ring.visible=false;active=carrier=closest;active.ring.visible=true;distance=d}
+  }
+ }
+ if(distance>4.6){$('status').textContent='Aproxime o jogador da bola para executar';return}
  lastKick=now;
- const teammates=players.filter(p=>p.team===0&&p!==active&&p.index!==0);
- let receiver=null,dx=active.team===0?1:-1,dz=0;
+ const teammates=players.filter(p=>p.team===carrier.team&&p!==carrier&&p.index!==0);
+ const attackDirection=carrier.team===0?1:-1;
+ let receiver=null;
  if(type==='pass'&&teammates.length){
-  // Passe curto: companheiro mais próximo de quem está com a bola.
-  receiver=teammates.reduce((best,p)=>!best||Math.hypot(p.x-active.x,p.z-active.z)<Math.hypot(best.x-active.x,best.z-active.z)?p:best,null);
+  receiver=teammates.reduce((best,p)=>!best||Math.hypot(p.x-carrier.x,p.z-carrier.z)<Math.hypot(best.x-carrier.x,best.z-carrier.z)?p:best,null);
  }else if(type==='through'&&teammates.length){
-  // Lançamento: companheiro mais adiantado em direção ao gol adversário.
-  const attackDirection=active.team===0?1:-1;
   receiver=teammates.reduce((best,p)=>{
    if(!best)return p;
-   const progress=(p.x-active.x)*attackDirection,bestProgress=(best.x-active.x)*attackDirection;
-   if(progress>bestProgress)return p;
-   if(progress===bestProgress&&Math.abs(p.z-ball.position.z)<Math.abs(best.z-ball.position.z))return p;
-   return best;
+   const progress=(p.x-carrier.x)*attackDirection,bestProgress=(best.x-carrier.x)*attackDirection;
+   return progress>bestProgress?p:best;
   },null);
  }
+ // Posiciona a bola no pé antes de calcular o vetor, evitando erro de direção.
+ const facing=carrier.group.rotation.y;
+ const launchX=carrier.x+Math.sin(facing)*.92;
+ const launchZ=carrier.z+Math.cos(facing)*.92;
+ ball.position.set(launchX,.4,launchZ);
+ let dx=attackDirection,dz=0,power=15,vertical=.55;
  if(receiver){
-  dx=receiver.x-ball.position.x;dz=receiver.z-ball.position.z;
-  if(type==='through')dx+=(active.team===0?2.2:-2.2);
- }else if(type==='shoot'){
-  const keeper=players.find(p=>p.team===1&&p.index===0);
-  const targetZ=clamp(ball.position.z*.12-(keeper?keeper.z*.12:0),-2.95,2.95);
-  dz=targetZ-ball.position.z;
- }
- const len=Math.hypot(dx,dz)||1;
- const power=type==='shoot'?25:type==='through'?18.5:14.5;
- ball.position.x=active.x+Math.sin(active.group.rotation.y)*.78;
- ball.position.z=active.z+Math.cos(active.group.rotation.y)*.78;
- ball.position.y=.38;
- ball.userData.vx=dx/len*power;ball.userData.vz=dz/len*power;
- ball.userData.vy=type==='shoot'?4.1:type==='through'?1.35:.55;
- if(receiver){
+  dx=receiver.x-launchX;dz=receiver.z-launchZ;
+  const distanceToReceiver=Math.hypot(dx,dz);
+  power=clamp(distanceToReceiver*1.18,type==='through'?17:13,type==='through'?23:19);
+  if(type==='through'){dx+=attackDirection*2.0;vertical=1.15}
   if(active)active.ring.visible=false;
   active=receiver;active.ring.visible=true;
-  $('status').textContent=type==='through'?'LANÇAMENTO! Bola direcionada ao companheiro mais avançado.':'PASSE! Bola direcionada ao companheiro mais próximo.';
- }else $('status').textContent=type==='shoot'?'CHUTE DIRECIONADO! ⚽':'PASSE PARA FRENTE!';
+  $('status').textContent=type==='through'?'LANÇAMENTO! Controle passou ao companheiro mais avançado.':'PASSE! Controle passou ao companheiro mais próximo.';
+ }else if(type==='shoot'){
+  const goalX=carrier.team===0?24:-24;
+  const keeper=players.find(p=>p.team!==carrier.team&&p.index===0);
+  const targetZ=clamp((keeper?keeper.z:0)*.18,-2.65,2.65);
+  dx=goalX-launchX;dz=targetZ-launchZ;power=26;vertical=4.0;
+  $('status').textContent='CHUTE! ⚽';
+ }
+ const len=Math.hypot(dx,dz)||1;
+ ball.userData.vx=dx/len*power+carrier.vx*.22;
+ ball.userData.vz=dz/len*power+carrier.vz*.22;
+ ball.userData.vy=vertical;
 }
 function slideTackle(){
  if(!running||paused||!active)return;
@@ -437,17 +448,17 @@ function loop(t){
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
 }
 $('startBtn').addEventListener('click',start);
-// Ações no pointerdown: cada dedo é tratado como um ponteiro independente (multitoque).
+// Entrada multitoque: nenhum controle captura o ponteiro do outro.
+const actionPointers=new Map();
 function bindTouchAction(id,action){
  const button=$(id);
  button.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
   e.preventDefault();e.stopPropagation();
+  actionPointers.set(e.pointerId,button);
   button.classList.add('pressed');
   action();
- });
- const release=()=>button.classList.remove('pressed');
- ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>button.addEventListener(ev,release));
+ },{passive:false});
 }
 bindTouchAction('slideBtn',slideTackle);
 bindTouchAction('passBtn',()=>kick('pass'));
@@ -467,17 +478,21 @@ function updateStick(e){
  const strength=(mag-dead)/(1-dead),scale=strength/mag;
  move={x:nx*scale,z:ny*scale};
 }
-joystick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;try{joystick.setPointerCapture(e.pointerId)}catch(_){}updateStick(e)});
-joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e)}});
-function releaseStick(e){if(e.pointerId!==stickPointer)return;stickPointer=null;move={x:0,z:0};stick.style.transform='translate(0,0)'}
-['pointerup','pointercancel','lostpointercapture'].forEach(ev=>joystick.addEventListener(ev,releaseStick));
-// O sprint só desliga quando o toque é solto ou cancelado, não ao sair da borda do botão.
+joystick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;updateStick(e)},{passive:false});
+window.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e)}},{passive:false});
+function releasePointer(e){
+ const button=actionPointers.get(e.pointerId);
+ if(button){button.classList.remove('pressed');actionPointers.delete(e.pointerId)}
+ if(e.pointerId===stickPointer){stickPointer=null;move={x:0,z:0};stick.style.transform='translate(0,0)'}
+ if(e.pointerId===sprintPointer){sprintPointer=null;sprint=false;sprintBtn.classList.remove('pressed')}
+}
+window.addEventListener('pointerup',releasePointer);
+window.addEventListener('pointercancel',releasePointer);
+// Sprint mantém seu próprio identificador de toque e não interfere no analógico nem nas ações.
 const sprintBtn=$('sprintBtn');let sprintPointer=null;
-sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();sprintPointer=e.pointerId;sprint=true;try{sprintBtn.setPointerCapture(e.pointerId)}catch(_){}sprintBtn.classList.add('pressed')});
-function releaseSprint(e){if(sprintPointer!==null&&e.pointerId!==sprintPointer)return;sprintPointer=null;sprint=false;sprintBtn.classList.remove('pressed')}
-['pointerup','pointercancel','lostpointercapture'].forEach(ev=>sprintBtn.addEventListener(ev,releaseSprint));
-window.addEventListener('blur',()=>{sprint=false;sprintPointer=null;move={x:0,z:0};stick.style.transform='translate(0,0)';sprintBtn.classList.remove('pressed')});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){sprint=false;sprintPointer=null;move={x:0,z:0};sprintBtn.classList.remove('pressed')}});
+sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();sprintPointer=e.pointerId;sprint=true;sprintBtn.classList.add('pressed')},{passive:false});
+window.addEventListener('blur',()=>{sprint=false;sprintPointer=null;stickPointer=null;actionPointers.forEach(b=>b.classList.remove('pressed'));actionPointers.clear();move={x:0,z:0};stick.style.transform='translate(0,0)';sprintBtn.classList.remove('pressed')});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){sprint=false;sprintPointer=null;stickPointer=null;actionPointers.forEach(b=>b.classList.remove('pressed'));actionPointers.clear();move={x:0,z:0};sprintBtn.classList.remove('pressed')}});
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='ArrowUp'||e.key==='w')move.z=-1;if(e.key==='ArrowDown'||e.key==='s')move.z=1;if(e.key==='ArrowLeft'||e.key==='a')move.x=-1;if(e.key==='ArrowRight'||e.key==='d')move.x=1;if(e.key===' ')kick('shoot');if(e.key.toLowerCase()==='x')kick('pass')});
 window.addEventListener('keyup',e=>{keys[e.key]=false;if(['ArrowUp','w','ArrowDown','s'].includes(e.key))move.z=0;if(['ArrowLeft','a','ArrowRight','d'].includes(e.key))move.x=0});
 
