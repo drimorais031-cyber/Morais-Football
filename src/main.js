@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-3";
-import { BallPhysics } from "./physics.js?v=mf-v1-3";
-import { Controls } from "./controls.js?v=mf-v1-3";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-3";
-import { Match } from "./match.js?v=mf-v1-3";
+import { createScene } from "./scene.js?v=mf-v1-4";
+import { BallPhysics } from "./physics.js?v=mf-v1-4";
+import { Controls } from "./controls.js?v=mf-v1-4";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-4";
+import { Match } from "./match.js?v=mf-v1-4";
 
 const $=s=>document.querySelector(s);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
