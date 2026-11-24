@@ -229,7 +229,7 @@ function setup(){
  for(let row=-1;row<4;row++)for(let col=-1;col<7;col++){const px=col*170+(row%2)*85,py=row*170+80;pentagon(px,py,43,(row+col)*.12)}
  ctx.strokeStyle='#b8b9b0';ctx.lineWidth=5;for(let y=0;y<=512;y+=85){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1024,y);ctx.stroke()}
  const ballTexture=new THREE.CanvasTexture(ballCanvas);ballTexture.colorSpace=THREE.SRGBColorSpace;
- const geo=new THREE.SphereGeometry(.34,32,24);ball=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({map:ballTexture,roughness:.48,metalness:0}));ball.position.set(0,.36,0);ball.castShadow=true;scene.add(ball);
+ const geo=new THREE.SphereGeometry(.43,40,32);const ballMaterial=new THREE.MeshBasicMaterial({map:ballTexture,toneMapped:false});ball=new THREE.Mesh(geo,ballMaterial);ball.position.set(0,.44,0);ball.castShadow=true;ball.frustumCulled=false;ball.renderOrder=5;ball.visible=true;scene.add(ball);
  const ballShadow=new THREE.Mesh(new THREE.CircleGeometry(.42,24),new THREE.MeshBasicMaterial({color:0x07110b,transparent:true,opacity:.38,depthWrite:false}));
  ballShadow.rotation.x=-Math.PI/2;ballShadow.position.y=.018;scene.add(ballShadow);ball.userData.shadow=ballShadow;
 }
@@ -252,11 +252,11 @@ function kick(type){
  if(!running||paused||goalPause>0||!active||!ball)return;
  const now=performance.now();if(now-lastKick<260)return;
  let carrier=active,distance=Math.hypot(carrier.x-ball.position.x,carrier.z-ball.position.z);
- if(distance>3.2){
-  const nearestPlayer=players.filter(p=>p.team===0&&p.index!==0).map(p=>({p,d:Math.hypot(p.x-ball.position.x,p.z-ball.position.z)})).sort((a,b)=>a.d-b.d)[0];
-  if(nearestPlayer&&nearestPlayer.d<distance){if(active)active.ring.visible=false;active=carrier=nearestPlayer.p;active.ring.visible=true;distance=nearestPlayer.d}
- }
- if(distance>4.2){$('status').textContent='Aproxime o jogador da bola para executar';return}
+ // O toque de ação continua funcionando enquanto o analógico está pressionado.
+ const nearestPlayer=players.filter(p=>p.team===0&&p.index!==0).map(p=>({p,d:Math.hypot(p.x-ball.position.x,p.z-ball.position.z)})).sort((a,b)=>a.d-b.d)[0];
+ if(nearestPlayer&&nearestPlayer.d<distance){carrier=nearestPlayer.p;distance=nearestPlayer.d}
+ if(distance>5.8){$('status').textContent='Aproxime a equipe da bola para executar';return}
+ if(carrier!==active){if(active)active.ring.visible=false;active=carrier;active.ring.visible=true}
  lastKick=now;
  const attackDir=carrier.team===0?1:-1;
  const teammates=players.filter(p=>p.team===carrier.team&&p!==carrier&&p.index!==0);
@@ -558,6 +558,7 @@ function bindTouchAction(id,action){
  const button=$(id);
  button.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
+  if(controlsEditMode)return;
   e.preventDefault();e.stopPropagation();
   actionPointers.set(e.pointerId,button);
   button.classList.add('pressed');
@@ -582,7 +583,7 @@ function updateStick(e){
  const strength=(mag-dead)/(1-dead),scale=strength/mag;
  move={x:nx*scale,z:ny*scale};
 }
-joystick.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;updateStick(e)},{passive:false});
+joystick.addEventListener('pointerdown',e=>{if(controlsEditMode)return;e.preventDefault();e.stopPropagation();stickPointer=e.pointerId;updateStick(e)},{passive:false});
 window.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e)}},{passive:false});
 function releasePointer(e){
  const button=actionPointers.get(e.pointerId);
@@ -594,7 +595,7 @@ window.addEventListener('pointerup',releasePointer);
 window.addEventListener('pointercancel',releasePointer);
 // Sprint mantém seu próprio identificador de toque e não interfere no analógico nem nas ações.
 const sprintBtn=$('sprintBtn');let sprintPointer=null;
-sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();sprintPointer=e.pointerId;sprint=true;sprintBtn.classList.add('pressed')},{passive:false});
+sprintBtn.addEventListener('pointerdown',e=>{if(controlsEditMode)return;e.preventDefault();e.stopPropagation();sprintPointer=e.pointerId;sprint=true;sprintBtn.classList.add('pressed')},{passive:false});
 window.addEventListener('blur',()=>{sprint=false;sprintPointer=null;stickPointer=null;actionPointers.forEach(b=>b.classList.remove('pressed'));actionPointers.clear();move={x:0,z:0};stick.style.transform='translate(0,0)';sprintBtn.classList.remove('pressed')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){sprint=false;sprintPointer=null;stickPointer=null;actionPointers.forEach(b=>b.classList.remove('pressed'));actionPointers.clear();move={x:0,z:0};sprintBtn.classList.remove('pressed')}});
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='ArrowUp'||e.key==='w')move.z=-1;if(e.key==='ArrowDown'||e.key==='s')move.z=1;if(e.key==='ArrowLeft'||e.key==='a')move.x=-1;if(e.key==='ArrowRight'||e.key==='d')move.x=1;if(e.key===' ')kick('shoot');if(e.key.toLowerCase()==='x')kick('pass')});
