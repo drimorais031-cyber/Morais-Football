@@ -483,96 +483,35 @@ let selectedControlId='passBtn';
 function getControlData(){let data={};try{data=JSON.parse(localStorage.getItem('moraisFootballControls')||'{}')}catch(e){}return data}
 function saveControlPositions(){
  const data=getControlData();
- controlElements().forEach(el=>{
-  const item=data[el.id]||{};
-  if(el.dataset.customPosition==='1'){const r=el.getBoundingClientRect();item.x=r.left/innerWidth;item.y=r.top/innerHeight}
-  const scale=Number(el.dataset.controlScale||1);if(scale!==1)item.scale=scale;else delete item.scale;
-  if(Object.keys(item).length)data[el.id]=item;
- });
- try{localStorage.setItem('moraisFootballControls',JSON.stringify(data))}catch(e){}
-}
-function applyControlPositions(){
- const data=getControlData();
- Object.entries(data).forEach(([id,p])=>{
-  const el=$(id);if(!el)return;
-  if(Number.isFinite(p.x)&&Number.isFinite(p.y)){el.style.position='fixed';el.style.left=(p.x*innerWidth)+'px';el.style.top=(p.y*innerHeight)+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1'}
-  if(Number.isFinite(p.scale)){el.dataset.controlScale=String(clamp(p.scale,.6,1.8));el.style.setProperty('--control-scale',el.dataset.controlScale)}
- });
-}
-function resizeSelectedControl(delta){
- const el=$(selectedControlId);if(!el)return;
- const current=Number(el.dataset.controlScale||1),next=clamp(Math.round((current+delta)*10)/10,.6,1.8);
- el.dataset.controlScale=String(next);el.style.setProperty('--control-scale',String(next));
- $('selectedControlSize').textContent=Math.round(next*100)+'%';
+ // Arraste global: acompanha o dedo mesmo quando ele sai da área original do botão.
+const controlPointerDrags=new Map();
+const controlSelector='#joystick,#passBtn,#shootBtn,#switchBtn,#sprintBtn,#slideBtn,#throughBtn';
+document.addEventListener('pointerdown',e=>{
+ if(!controlsEditMode)return;
+ const el=e.target.closest?.(controlSelector);
+ if(!el)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ const r=el.getBoundingClientRect();
+ controlPointerDrags.set(e.pointerId,{el,dx:e.clientX-r.left,dy:e.clientY-r.top});
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!controlsEditMode)return;
+ const drag=controlPointerDrags.get(e.pointerId);
+ if(!drag)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ const el=drag.el;
+ const x=clamp(e.clientX-drag.dx,0,innerWidth-el.getBoundingClientRect().width);
+ const y=clamp(e.clientY-drag.dy,0,innerHeight-el.getBoundingClientRect().height);
+ el.style.position='fixed';el.style.left=x+'px';el.style.top=y+'px';
+ el.style.right='auto';el.style.bottom='auto';el.style.margin='0';
+ el.dataset.customPosition='1';
+},true);
+function finishControlDrag(e){
+ if(!controlPointerDrags.has(e.pointerId))return;
+ controlPointerDrags.delete(e.pointerId);
  saveControlPositions();
 }
-function setControlsEditMode(enabled){
- controlsEditMode=enabled;
- $('game').classList.toggle('editing-controls',enabled);
- editControlsBtn.textContent=enabled?'CONCLUIR POSIÇÃO':'MOVER CONTROLES';
- $('controlHelp').textContent=enabled?'Arraste o analógico e cada botão para qualquer lugar da tela. Toque em CONCLUIR POSIÇÃO para salvar.':'Ative para arrastar o analógico e os botões. A posição fica salva neste aparelho.';
-}
-function openControlsSettings(){setControlsEditMode(false);controlSettings.classList.remove('hidden');openControlSettings.textContent='⚙ CONTROLES'}
-openControlSettings.addEventListener('click',()=>{
- if(controlsEditMode){setControlsEditMode(false);saveControlPositions();openControlSettings.textContent='⚙ CONTROLES'}
- else openControlsSettings();
-});
-closeControlSettings.addEventListener('click',()=>{setControlsEditMode(false);controlSettings.classList.add('hidden');openControlSettings.textContent='⚙ CONTROLES'});
-editControlsBtn.addEventListener('click',()=>{
- const enable=!controlsEditMode;
- setControlsEditMode(enable);
- if(enable){
-  controlSettings.classList.add('hidden');
-  openControlSettings.textContent='✓ CONCLUIR';
- }else{
-  saveControlPositions();
-  openControlSettings.textContent='⚙ CONTROLES';
- }
-});
-$('controlSizeSelect').addEventListener('change',e=>{selectedControlId=e.target.value;const el=$(selectedControlId);const scale=Number(el?.dataset.controlScale||1);$('selectedControlSize').textContent=Math.round(scale*100)+'%'});
-$('shrinkControlBtn').addEventListener('click',()=>resizeSelectedControl(-.1));
-$('growControlBtn').addEventListener('click',()=>resizeSelectedControl(.1));
-resetControlsBtn.addEventListener('click',()=>{try{localStorage.removeItem('moraisFootballControls')}catch(e){}controlElements().forEach(el=>{el.style.position='';el.style.left='';el.style.top='';el.style.right='';el.style.bottom='';el.style.margin='';el.style.removeProperty('--control-scale');delete el.dataset.customPosition;delete el.dataset.controlScale});setControlsEditMode(false);$('selectedControlSize').textContent='100%'});
-controlElements().forEach(el=>{
- const activePointers=new Map();let pinchStart=null;
- el.addEventListener('pointerdown',e=>{
-  if(!controlsEditMode)return;
-  e.preventDefault();e.stopImmediatePropagation();
-  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  try{el.setPointerCapture(e.pointerId)}catch(_){}
-  if(activePointers.size===1){
-   const r=el.getBoundingClientRect();dragControl={el,id:e.pointerId,dx:e.clientX-r.left,dy:e.clientY-r.top};
-  }else if(activePointers.size===2){
-   const pts=[...activePointers.values()],dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
-   pinchStart={distance:Math.max(1,dist),scale:Number(el.dataset.controlScale||1)};
-   dragControl=null;
-  }
- },true);
- el.addEventListener('pointermove',e=>{
-  if(!controlsEditMode||!activePointers.has(e.pointerId))return;
-  e.preventDefault();e.stopImmediatePropagation();
-  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(activePointers.size>=2&&pinchStart){
-   const pts=[...activePointers.values()],dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
-   const next=clamp(Math.round((pinchStart.scale*dist/pinchStart.distance)*20)/20,.5,2);
-   el.dataset.controlScale=String(next);el.style.setProperty('--control-scale',String(next));
-   $('selectedControlSize').textContent=Math.round(next*100)+'%';
-  }else if(dragControl&&dragControl.el===el&&dragControl.id===e.pointerId){
-   const x=clamp(e.clientX-dragControl.dx,0,innerWidth-el.offsetWidth),y=clamp(e.clientY-dragControl.dy,0,innerHeight-el.offsetHeight);
-   el.style.position='fixed';el.style.left=x+'px';el.style.top=y+'px';el.style.right='auto';el.style.bottom='auto';el.style.margin='0';el.dataset.customPosition='1';
-  }
- },true);
- const finish=e=>{
-  if(!activePointers.has(e.pointerId))return;
-  activePointers.delete(e.pointerId);pinchStart=null;dragControl=null;
-  if(activePointers.size===1){
-   const [id,p]=[...activePointers.entries()][0],r=el.getBoundingClientRect();
-   dragControl={el,id,dx:p.x-r.left,dy:p.y-r.top};
-  }
-  saveControlPositions();
- };
- ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,finish,true));
-});
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,finishControlDrag,true));
 applyControlPositions();
 
 window.addEventListener('resize',()=>{requestAnimationFrame(resize)});window.addEventListener('orientationchange',()=>{setTimeout(()=>{resize();if(running&&renderer){renderer.domElement.style.display='block';}},180)});if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(resize));document.addEventListener('visibilitychange',()=>{if(document.hidden)paused=true});
