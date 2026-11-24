@@ -76,6 +76,48 @@ function buildPitch(){
   for(let y=0;y<=2.41;y+=.48){addNet([x,y,-3.55],[backX,y*.78,-3.55]);addNet([x,y,3.55],[backX,y*.78,3.55]);addNet([backX,y*.78,-3.55],[backX,y*.78,3.55])}
   const netGeo=new THREE.BufferGeometry().setFromPoints(netPts);scene.add(new THREE.LineSegments(netGeo,netMat));
  }
+ // Marcações de escanteio e pontos de pênalti.
+ const spotMat=new THREE.MeshBasicMaterial({color:0xf4f7ee});
+ for(const side of [-1,1]){
+  const spot=new THREE.Mesh(new THREE.CircleGeometry(.13,16),spotMat);
+  spot.rotation.x=-Math.PI/2;spot.position.set(side*17.1,.045,0);scene.add(spot);
+  // Arco da área, construído como uma linha curta fora da grande área.
+  const arc=[];for(let i=0;i<=28;i++){const a=(-Math.PI*.36)+(i/28)*(Math.PI*.72);arc.push([side*17.1+Math.cos(a)*4.5,Math.sin(a)*4.5])}line(arc,white);
+  // Bandeiras nos quatro cantos: mastro, tecido triangular e base.
+  for(const zSide of [-1,1]){
+   const cx=side*23.55,cz=zSide*14.55;
+   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,1.75,8),mat(0xf3f5ef,.45));
+   pole.position.set(cx,.88,cz);scene.add(pole);
+   const flagGeo=new THREE.BufferGeometry();
+   flagGeo.setAttribute('position',new THREE.Float32BufferAttribute([
+    0,1.62,0, .72,1.43,0, 0,1.08,0
+   ],3));
+   flagGeo.setIndex([0,1,2]);flagGeo.computeVertexNormals();
+   const flag=new THREE.Mesh(flagGeo,new THREE.MeshStandardMaterial({color:(side===1?0xffd21f:0xe83a45),side:THREE.DoubleSide,roughness:.7}));
+   flag.position.set(cx,.0,cz);scene.add(flag);
+   const base=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.08,10),mat(0xd7ddd4));
+   base.position.set(cx,.04,cz);scene.add(base);
+   // Pequeno quarto de círculo no gramado em cada escanteio.
+   const corner=[];for(let i=0;i<=12;i++){const a=i/12*Math.PI/2;corner.push([cx-side*.5+Math.cos(a)*.5,cz-zSide*.5+Math.sin(a)*.5])}
+   line(corner,white);
+  }
+ }
+ // Redes dos gols com malha mais visível e estrutura reforçada.
+ for(const side of [-1,1]){
+  const gx=side*24,back=gx+side*2.5,netLines=[];
+  for(let z=-3.5;z<=3.51;z+=.5){
+   netLines.push([gx,0,z],[back,0,z],[gx,2.35,z],[back,1.9,z]);
+  }
+  for(let y=0;y<=2.36;y+=.35){
+   const yy=y,backY=y*.81;
+   netLines.push([gx,yy,-3.5],[back,backY,-3.5],[gx,yy,3.5],[back,backY,3.5]);
+  }
+  for(let z=-3.5;z<=3.51;z+=.5){
+   netLines.push([back,0,z],[back,1.9,z]);
+  }
+  const points=[];for(let i=0;i<netLines.length;i++)points.push(new THREE.Vector3(netLines[i][0],netLines[i][1],netLines[i][2]));
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.72})));
+ }
  // Low stands and floodlight pylons frame the pitch.
  for(const side of [-1,1]){
   box(FIELD_X,.8,3,mat(0x25343a),0,-.1,side*18);
@@ -163,7 +205,7 @@ function start(){
  setup();$('menu').classList.add('hidden');$('game').classList.remove('hidden');$('loading').style.display='none';running=true;paused=false;$('status').textContent='Partida em andamento';$('pauseBtn').textContent='PAUSAR';last=performance.now();cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(loop);
  } catch(error) { console.error('Erro ao iniciar partida:',error); running=false; const msg=document.createElement('div');msg.style.cssText='padding:16px;margin:10px;color:#fff;background:#391b1b;border:1px solid #b84b4b;border-radius:10px;font:13px/1.5 Arial';msg.textContent='Não foi possível iniciar a partida 3D: '+error.message;$('loading').style.display='none';viewport.appendChild(msg); }
 }
-function resize(){if(!renderer)return;const w=viewport.clientWidth,h=viewport.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+function resize(){if(!renderer)return;const rect=viewport.getBoundingClientRect(),w=Math.floor(rect.width),h=Math.floor(rect.height);if(!w||!h)return;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.domElement.style.width='100%';renderer.domElement.style.height='100%'}
 function resetGoal(){players.forEach(p=>{p.x=p.homeX;p.z=p.homeZ;p.vx=p.vz=0;p.group.position.set(p.x,0,p.z)});ball.position.set(0,.36,0);ball.userData.vx=ball.userData.vz=ball.userData.vy=0;possessionTeam=null;possessionCandidate=null;possessionCandidateTime=0;goalPause=1.2}
 function updatePossession(dt){
  // Considera posse apenas quando um atleta de linha está realmente perto da bola, baixa e sem grande velocidade.
@@ -331,5 +373,5 @@ window.addEventListener('blur',()=>{sprint=false;sprintPointer=null;move={x:0,z:
 document.addEventListener('visibilitychange',()=>{if(document.hidden){sprint=false;sprintPointer=null;move={x:0,z:0};sprintBtn.classList.remove('pressed')}});
 window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='ArrowUp'||e.key==='w')move.z=-1;if(e.key==='ArrowDown'||e.key==='s')move.z=1;if(e.key==='ArrowLeft'||e.key==='a')move.x=-1;if(e.key==='ArrowRight'||e.key==='d')move.x=1;if(e.key===' ')kick('shoot');if(e.key.toLowerCase()==='x')kick('pass')});
 window.addEventListener('keyup',e=>{keys[e.key]=false;if(['ArrowUp','w','ArrowDown','s'].includes(e.key))move.z=0;if(['ArrowLeft','a','ArrowRight','d'].includes(e.key))move.x=0});
-window.addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(document.hidden)paused=true});
+window.addEventListener('resize',()=>{requestAnimationFrame(resize)});window.addEventListener('orientationchange',()=>{setTimeout(()=>{resize();if(running&&renderer){renderer.domElement.style.display='block';}},180)});if(window.visualViewport)window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(resize));document.addEventListener('visibilitychange',()=>{if(document.hidden)paused=true});
 })();
