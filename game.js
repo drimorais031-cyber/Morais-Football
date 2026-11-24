@@ -119,6 +119,8 @@ function kick(type){
 }
 function start(){
  try {
+ if(document.documentElement.requestFullscreen&&!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});
+ if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});
  if(!renderer)buildPitch();if(ball?.userData.shadow)scene.remove(ball.userData.shadow);if(ball)scene.remove(ball);players.forEach(p=>scene.remove(p.group));score=[0,0];seconds=0;move={x:0,z:0};sprint=false;goalPause=0;
  $('homeLabel').textContent=$('homeTeam').value.toUpperCase();$('awayLabel').textContent=$('awayTeam').value.toUpperCase();$('homeScore').textContent='0';$('awayScore').textContent='0';
  setup();$('menu').classList.add('hidden');$('game').classList.remove('hidden');$('loading').style.display='none';running=true;paused=false;$('status').textContent='Partida em andamento';$('pauseBtn').textContent='PAUSAR';last=performance.now();cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(loop);
