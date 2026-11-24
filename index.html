@@ -6,14 +6,7 @@
 <meta name="theme-color" content="#07110b">
 <meta name="description" content="Morais Football 3D">
 <title>Morais Football</title>
-<link rel="stylesheet" href="style.css?v=playability-20261124">
-<style>
-html,body{margin:0;min-height:100%;background:#080b68;color:#fff}
-#orientationNotice{display:none!important}
-.app{display:block!important;width:100%;min-height:100dvh;height:auto;overflow:visible!important}
-#menu:not(.hidden){display:flex!important;position:relative;z-index:5;width:100%;height:auto;min-height:100dvh;overflow:visible!important}
-@media(max-width:900px),(max-height:600px){#menu .menu-main{display:block!important;flex:0 0 auto!important;width:100%;min-height:0;margin:12px auto!important}#menu .menu-player-art{display:none!important}#menu .menu-content{display:flex;flex-direction:column;width:100%;gap:10px}#menu .menu-bottom{margin-top:8px;flex-wrap:wrap}}
-</style>
+<link rel="stylesheet" href="style.css?v=landscape-apk-20261124">
 </head>
 <body>
 <div id="orientationNotice" role="status">
@@ -96,6 +89,6 @@ tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>x.classList.togg
 modes.forEach(m=>m.addEventListener('click',()=>{modes.forEach(x=>x.classList.toggle('selected',x===m));menuPage(m.dataset.mode)}));
 })();
 </script>
-<script type="module" src="game.js?v=playability-20261124"></script>
+<script type="module" src="game.js?v=landscape-apk-20261124"></script>
 </body>
 </html>
