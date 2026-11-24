@@ -24,8 +24,18 @@ const formations=[[-21,0],[-14,-10],[-14,-3],[-14,4],[-14,10],[-6,-11],[-6,-4],[
 function mat(color,roughness=.8){return new THREE.MeshStandardMaterial({color,roughness})}
 function box(w,h,d,m,x,y,z){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);scene.add(o);return o}
 function line(points,color=0xffffff){const g=new THREE.BufferGeometry().setFromPoints(points.map(p=>new THREE.Vector3(p[0],.035,p[1])));scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:.9})))}
+function kit(name){
+ const kits={
+  'Morais FC':[0xb8e83f,0x17251b],'Brasil':[0xf2d52e,0x176b37],
+  'São Paulo':[0xf2f2f2,0x252525],'Palmeiras':[0x087b42,0xf2f2f2],
+  'Santos':[0xf5f5f5,0x252525],'Flamengo':[0xd51e2b,0x171717],
+  'Corinthians':[0xf4f4f4,0x202020],'Argentina':[0x8bc8e8,0xf4f4f4],
+  'Rivais FC':[0x315cdb,0xf1f1f1]
+ };
+ return kits[name]||kits['Morais FC'];
+}
 function makePlayer(team,index,x,z){
- const group=new THREE.Group(),shirt=mat(team===0?0xb8e83f:0xf0f2ee),shorts=mat(team===0?0x17251b:0x252b31),skin=mat(0xd7a47b),boots=mat(0x101010);
+ const group=new THREE.Group(),colors=kit(team===0?$('homeTeam').value:$('awayTeam').value),shirt=mat(colors[0]),shorts=mat(colors[1]),skin=mat(0xd7a47b),boots=mat(0x101010);
  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.62,4,8),shirt);body.position.y=1.05;group.add(body);
  const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),skin);head.position.y=1.82;group.add(head);
  const legGeo=new THREE.CapsuleGeometry(.13,.48,3,6),legs=[];
@@ -68,6 +78,8 @@ function setup(){
  active=players.find(p=>p.team===0&&p.index===9);active.ring.visible=true;
  const geo=new THREE.SphereGeometry(.34,20,16);ball=new THREE.Mesh(geo,mat(0xffffff,.35));ball.position.set(0,.36,0);ball.castShadow=true;scene.add(ball);
  const seam=new THREE.Mesh(new THREE.TorusGeometry(.23,.012,5,24),mat(0x202020));seam.rotation.x=Math.PI/2;ball.add(seam);
+ const ballShadow=new THREE.Mesh(new THREE.CircleGeometry(.42,24),new THREE.MeshBasicMaterial({color:0x07110b,transparent:true,opacity:.38,depthWrite:false}));
+ ballShadow.rotation.x=-Math.PI/2;ballShadow.position.y=.018;scene.add(ballShadow);ball.userData.shadow=ballShadow;
 }
 function nearest(team){return players.filter(p=>p.team===team&&p.index!==0).sort((a,b)=>Math.hypot(a.x-ball.position.x,a.z-ball.position.z)-Math.hypot(b.x-ball.position.x,b.z-ball.position.z))[0]}
 function selectPlayer(){const p=nearest(0);if(active)active.ring.visible=false;active=p;if(active)active.ring.visible=true;$('status').textContent='Jogador selecionado'}
@@ -130,6 +142,8 @@ function update(dt){
   }
  }
  ball.position.x+=vx*dt;ball.position.z+=vz*dt;vy-=9.8*dt;ball.position.y+=vy*dt;
+ ball.userData.shadow.position.set(ball.position.x,.018,ball.position.z);
+ ball.userData.shadow.scale.setScalar(clamp(1-(ball.position.y-.36)*.22,.55,1));
  if(ball.position.y<.36){ball.position.y=.36;if(vy<-.9)vy=-vy*.38;else vy=0}
  const drag=Math.pow(ball.position.y>.37?.993:.978,dt*60);vx*=drag;vz*=drag;
  ball.userData.vx=vx;ball.userData.vz=vz;ball.userData.vy=vy;
@@ -141,7 +155,19 @@ function update(dt){
   }else{ball.position.x=clamp(ball.position.x,-24,24);ball.userData.vx*=-.5;$('status').textContent='Bola saiu ou bateu na trave';}
  }
  }
-function loop(t){if(!running)return;const dt=Math.min((t-last)/1000,.04);last=t;if(!paused)update(dt);renderer.render(scene,camera);raf=requestAnimationFrame(loop)}
+function loop(t){
+ if(!running)return;
+ const dt=Math.min((t-last)/1000,.04);last=t;
+ if(!paused)update(dt);
+ // Câmera acompanha a jogada para manter a ação no centro da tela.
+ if(active&&ball){
+  const tx=active.x*.42+ball.position.x*.58,tz=active.z*.42+ball.position.z*.58;
+  const desired=new THREE.Vector3(tx,29,tz+34);
+  camera.position.lerp(desired,Math.min(1,dt*1.8));
+  camera.lookAt(tx,0,tz);
+ }
+ renderer.render(scene,camera);raf=requestAnimationFrame(loop)
+}
 $('startBtn').addEventListener('click',start);$('passBtn').addEventListener('click',()=>kick('pass'));$('shootBtn').addEventListener('click',()=>kick('shoot'));$('switchBtn').addEventListener('click',selectPlayer);
 $('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'CONTINUAR':'PAUSAR';$('status').textContent=paused?'Partida pausada':'Partida em andamento'});
 $('backBtn').addEventListener('click',()=>{running=false;cancelAnimationFrame(raf);$('game').classList.add('hidden');$('menu').classList.remove('hidden')});
