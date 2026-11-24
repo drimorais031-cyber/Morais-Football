@@ -36,21 +36,21 @@ function kit(name){
 }
 function makePlayer(team,index,x,z){
  const group=new THREE.Group(),colors=kit(team===0?$('homeTeam').value:$('awayTeam').value),shirt=mat(colors[0]),shorts=mat(colors[1]),skin=mat(0xd7a47b),boots=mat(0x101010);
- const body=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.62,4,8),shirt);body.position.y=1.05;group.add(body);
- const head=new THREE.Mesh(new THREE.SphereGeometry(.25,12,10),skin);head.position.y=1.82;group.add(head);
- const legGeo=new THREE.CapsuleGeometry(.13,.48,3,6),legs=[];
- for(const side of [-1,1]){const leg=new THREE.Mesh(legGeo,shorts);leg.position.set(side*.19,.42,0);group.add(leg);legs.push(leg);const foot=new THREE.Mesh(new THREE.BoxGeometry(.2,.12,.38),boots);foot.position.set(side*.19,.12,-.12);group.add(foot)}
- const armGeo=new THREE.CapsuleGeometry(.105,.48,3,6),arms=[];
- for(const side of [-1,1]){const arm=new THREE.Mesh(armGeo,shirt);arm.position.set(side*.43,1.22,0);arm.rotation.z=side*.12;group.add(arm);arms.push(arm)}
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.34,.48,4,8),shirt);body.position.y=.98;group.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.34,16,12),skin);head.position.y=1.72;group.add(head);
+ const legGeo=new THREE.CapsuleGeometry(.12,.36,3,6),legs=[];
+ for(const side of [-1,1]){const leg=new THREE.Mesh(legGeo,shorts);leg.position.set(side*.17,.34,0);group.add(leg);legs.push(leg);const foot=new THREE.Mesh(new THREE.BoxGeometry(.19,.11,.32),boots);foot.position.set(side*.17,.1,-.12);group.add(foot)}
+ const armGeo=new THREE.CapsuleGeometry(.11,.38,3,6),arms=[];
+ for(const side of [-1,1]){const arm=new THREE.Mesh(armGeo,shirt);arm.position.set(side*.39,1.12,0);arm.rotation.z=side*.12;group.add(arm);arms.push(arm)}
  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.105,.12,.16,8),skin);neck.position.y=1.68;group.add(neck);
- const hair=new THREE.Mesh(new THREE.SphereGeometry(.255,12,8,0,Math.PI*2,0,Math.PI*.48),mat(0x292522));hair.position.y=1.91;group.add(hair);
+ const hair=new THREE.Mesh(new THREE.SphereGeometry(.34,16,10,0,Math.PI*2,0,Math.PI*.48),mat(0x292522));hair.position.y=1.82;group.add(hair);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.58,.045,6,24),mat(0xffffff));ring.rotation.x=Math.PI/2;ring.position.y=.04;ring.visible=false;group.add(ring);
  group.position.set(x,0,z);scene.add(group);
  return {group,ring,legs,arms,team,index,x,z,vx:0,vz:0,homeX:x,homeZ:z,speed:index===0?6.2:7.2};
 }
 function buildPitch(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0x9fc4d5);scene.fog=new THREE.Fog(0x9fc4d5,55,105);
- camera=new THREE.PerspectiveCamera(48,1,.1,180);camera.position.set(0,31,39);camera.lookAt(0,0,0);
+ camera=new THREE.PerspectiveCamera(48,1,.1,180);camera.position.set(0,39,27);camera.lookAt(0,0,0);
  renderer=new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;viewport.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight(0xe8f4ff,0x31502b,2.0));
  const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-12,28,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
@@ -129,6 +129,17 @@ function kick(type){
  ball.userData.vx=dx/len*power;ball.userData.vz=dz/len*power;
  ball.userData.vy=type==='shoot'?4.6:type==='through'?1.8:1.0;
  $('status').textContent=type==='shoot'?'CHUTE DIRECIONADO! ⚽':type==='through'?'LANÇAMENTO EM PROFUNDIDADE!':'PASSE PARA FRENTE!';
+}
+function slideTackle(){
+ if(!running||paused||!active)return;
+ const opponent=players.filter(p=>p.team===1&&p.index!==0).sort((a,b)=>Math.hypot(a.x-active.x,a.z-active.z)-Math.hypot(b.x-active.x,b.z-active.z))[0];
+ if(!opponent)return;
+ const dx=opponent.x-active.x,dz=opponent.z-active.z,d=Math.hypot(dx,dz)||1;
+ active.vx=dx/d*active.speed*2.1;active.vz=dz/d*active.speed*2.1;
+ if(d<3.2){
+  ball.userData.vx=dx/d*10;ball.userData.vz=dz/d*10;ball.userData.vy=.7;
+  $('status').textContent='DESARME! BOA ROUBADA DE BOLA';
+ }else $('status').textContent='CARRINHO! APROXIME-SE DO ADVERSÁRIO';
 }
 function start(){
  try {
@@ -229,13 +240,13 @@ function loop(t){
  // Câmera acompanha a jogada para manter a ação no centro da tela.
  if(active&&ball){
   const tx=active.x*.42+ball.position.x*.58,tz=active.z*.42+ball.position.z*.58;
-  const desired=new THREE.Vector3(tx,29,tz+34);
+  const desired=new THREE.Vector3(tx,39,tz+27);
   camera.position.lerp(desired,Math.min(1,dt*1.8));
   camera.lookAt(tx,0,tz);
  }
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
 }
-$('startBtn').addEventListener('click',start);$('passBtn').addEventListener('click',()=>kick('pass'));$('shootBtn').addEventListener('click',()=>kick('shoot'));$('throughBtn').addEventListener('click',()=>kick('through'));$('switchBtn').addEventListener('click',selectPlayer);
+$('startBtn').addEventListener('click',start);$('slideBtn').addEventListener('click',slideTackle);$('passBtn').addEventListener('click',()=>kick('pass'));$('shootBtn').addEventListener('click',()=>kick('shoot'));$('throughBtn').addEventListener('click',()=>kick('through'));$('switchBtn').addEventListener('click',selectPlayer);
 $('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'CONTINUAR':'PAUSAR';$('status').textContent=paused?'Partida pausada':'Partida em andamento'});
 $('backBtn').addEventListener('click',()=>{running=false;cancelAnimationFrame(raf);$('game').classList.add('hidden');$('menu').classList.remove('hidden')});
 const joystick=$('joystick'),stick=$('stick');let stickPointer=null;
