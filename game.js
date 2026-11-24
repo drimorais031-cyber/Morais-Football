@@ -118,11 +118,57 @@ function buildPitch(){
   const points=[];for(let i=0;i<netLines.length;i++)points.push(new THREE.Vector3(netLines[i][0],netLines[i][1],netLines[i][2]));
   scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.72})));
  }
- // Low stands and floodlight pylons frame the pitch.
+ // Estádio completo ao redor do gramado: arquibancadas em quatro lados,
+ // setores em níveis, público simplificado, cobertura e refletores.
+ const concrete=mat(0x68747b),darkConcrete=mat(0x35434b),seatRed=mat(0xc62836),seatBlue=mat(0x2456a6),seatYellow=mat(0xe0b52d),seatWhite=mat(0xdce4e7);
+ // Laterais: três níveis de arquibancada com degraus e setores coloridos.
  for(const side of [-1,1]){
-  box(FIELD_X,.8,3,mat(0x25343a),0,-.1,side*18);
-  for(let i=0;i<18;i++){const seat=box(1.9,.35,1.1,mat(i%2?0x465b62:0x35494f),-22+i*2.6,.55,side*18);seat.position.y=.45}
-  for(const x of [-20,20]){box(.25,12,.25,mat(0x697c80),x,5,side*18);box(3,.2,.6,mat(0xeaf6ff),x,11,side*18)}
+  for(let tier=0;tier<3;tier++){
+   const z=side*(18.2+tier*2.45),y=.45+tier*1.18;
+   box(50,.75,2.7,concrete,0,y-.35,z);
+   box(49,.16,.22,darkConcrete,0,y+.18,z-side*.92);
+   for(let i=0;i<34;i++){
+    const x=-23.8+i*1.45;
+    const colors=[seatRed,seatBlue,seatYellow,seatWhite];
+    box(1.12,.42,.72,colors[(i+tier*3+(side===1?0:2))%4],x,y+.38,z-side*.28);
+   }
+  }
+  // Cobertura suspensa e treliças externas.
+  box(51,.42,4.2,mat(0x263943),0,5.35,side*26.1);
+  box(50,.12,3.7,mat(0x91a6ad),0,5.58,side*26.1);
+  for(const x of [-23,-12,0,12,23]){
+   box(.32,5.1,.32,darkConcrete,x,2.8,side*27.2);
+   box(.42,.25,3.5,mat(0x71858d),x,5.05,side*25.7);
+  }
+ }
+ // Fundos atrás dos gols, fechando o estádio como uma arena contínua.
+ for(const side of [-1,1]){
+  for(let tier=0;tier<3;tier++){
+   const x=side*(25.8+tier*2.35),y=.42+tier*1.15;
+   box(2.7,.72,34,concrete,x,y-.32,0);
+   box(.18,.14,33,darkConcrete,x-side*.92,y+.18,0);
+   for(let i=0;i<23;i++){
+    const z=-15.2+i*1.38;
+    const colors=[seatBlue,seatRed,seatWhite,seatYellow];
+    box(.72,.4,1.05,colors[(i+tier+(side===1?1:0))%4],x-side*.28,y+.36,z);
+   }
+  }
+  box(4.1,.4,35,mat(0x263943),side*32.2,5.25,0);
+  box(3.6,.12,34,mat(0x91a6ad),side*32.2,5.48,0);
+  for(const z of [-14,-7,0,7,14])box(.32,5,.32,darkConcrete,side*30.2,2.7,z);
+ }
+ // Painéis de publicidade na borda do campo e placar principal.
+ for(const side of [-1,1]){
+  box(48,.65,.18,mat(side===1?0xd9b52d:0x1c4d86),0,.18,side*15.35);
+ }
+ box(.35,3.2,.35,darkConcrete,0,7,-30.4);
+ box(9,.18,.45,mat(0x1a2934),0,8.6,-30.4);
+ box(8.6,2.1,.12,mat(0x153c53),0,7.45,-30.15);
+ // Refletores nas quatro extremidades da cobertura.
+ for(const x of [-22,22])for(const z of [-25.5,25.5]){
+  box(.28,7,.28,mat(0x71838a),x,3.5,z);
+  box(2.8,.32,.65,mat(0xeaf6ff),x,7.1,z);
+  for(let i=0;i<5;i++)box(.38,.2,.08,mat(0xffffff),x-1.05+i*.52,7.1,z-.36);
  }
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat(0x405b3d));ground.rotation.x=-Math.PI/2;ground.position.y=-.4;scene.add(ground);
 }
