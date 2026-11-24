@@ -1,7 +1,7 @@
-name: Deploy Morais Football to GitHub Pages
+name: Deploy Morais Football V1.0 to GitHub Pages
 on:
   push:
-    branches: [main]
+    branches: [main, v1-modular-3d]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,18 +17,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Check JavaScript syntax
-        run: node --check game.js
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/checkout@v4
+      - name: Validate ES modules
+        run: |
+          node --check src/main.js
+          node --check src/scene.js
+          node --check src/physics.js
+          node --check src/controls.js
+          node --check src/ai.js
+          node --check src/match.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - name: Wait for artifact indexing
-        run: sleep 10
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
