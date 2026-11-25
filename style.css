@@ -10,3 +10,15 @@
 @media(max-height:480px){#start>div{padding:12px 18px}.brand{width:36px;height:36px}.brand+p{margin:7px 0}h1{margin:3px 0;font-size:25px}.team-picks{margin-top:8px;gap:5px 8px}.team-preview{min-height:38px}.team-preview .crest{width:29px;height:33px}#play{margin:9px 0 5px;padding:10px}}
 
 .brand{width:82px;height:82px;padding:0;overflow:hidden;border:2px solid #e7ce4d;border-radius:18px;background:#07120d;box-shadow:0 0 24px #e7ce4d55}.brand img{display:block;width:100%;height:100%;object-fit:cover}.start-panel{background-image:linear-gradient(#07150de8,#07150df0),url("./src/brand.js");}
+
+/* Escudos estilizados dos clubes: cores do time, mascote e sigla em formato de brasão */
+.crest{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:none;width:48px;height:56px;padding:4px 2px 7px;color:var(--trim);background:linear-gradient(145deg,#fff8 0 7%,transparent 7% 100%),var(--crest);border:2px solid #e8dba4;clip-path:polygon(4% 0,96% 0,91% 72%,50% 100%,9% 72%);filter:drop-shadow(0 2px 3px #0009);text-shadow:0 1px 2px #000b}
+.crest:before{content:"";position:absolute;inset:3px 4px 7px;border:1px solid #ffffff9c;clip-path:polygon(0 0,100% 0,94% 70%,50% 100%,6% 70%);pointer-events:none}
+.crest-mascot{font-size:21px;line-height:23px;filter:drop-shadow(0 1px 1px #0008)}
+.crest b{font-size:8px;line-height:10px;letter-spacing:.3px;color:#fff;font-weight:1000}
+.team-preview .crest{width:53px;height:61px}
+#hud .crest{width:34px;height:39px;vertical-align:middle;display:inline-flex}
+#hud .crest-mascot{font-size:14px;line-height:15px}
+#hud .crest b{font-size:7px;line-height:8px}
+.team-picks{gap:9px 12px}
+.team-picks select{min-height:42px}
