@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-19";
-import { BallPhysics } from "./physics.js?v=mf-v1-19";
-import { Controls } from "./controls.js?v=mf-v1-19";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-19";
-import { Match } from "./match.js?v=mf-v1-19";
-import { createIntroMascot } from "./mascot.js?v=mf-v1-19";
+import { createScene } from "./scene.js?v=mf-v1-20";
+import { BallPhysics } from "./physics.js?v=mf-v1-20";
+import { Controls } from "./controls.js?v=mf-v1-20";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-20";
+import { Match } from "./match.js?v=mf-v1-20";
+import { createIntroMascot } from "./mascot.js?v=mf-v1-20";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
