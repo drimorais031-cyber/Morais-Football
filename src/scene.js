@@ -125,62 +125,67 @@ function createStadium(scene){
   addBox(scene,1,4,15,0x101a22,0,15,-48);
   addBox(scene,.18,2.8,12,0x263d4b,.58,15,-48);
 }
+function stadiumSignTexture(title,subtitle,color){
+  const canvas=document.createElement("canvas");canvas.width=1024;canvas.height=256;
+  const ctx=canvas.getContext("2d");
+  ctx.fillStyle="#071827";ctx.fillRect(0,0,1024,256);
+  ctx.fillStyle=color;ctx.fillRect(0,0,18,256);ctx.fillRect(1006,0,18,256);
+  ctx.fillStyle="#ffffff";ctx.font="900 92px Arial";ctx.textAlign="center";ctx.fillText(title,512,118);
+  ctx.fillStyle="#c9e5dc";ctx.font="bold 38px Arial";ctx.fillText(subtitle,512,184);
+  const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;return tex;
+}
 function createStadiumDetails(scene){
-  // Painéis publicitários baixos ao redor do gramado, fora das linhas de jogo
-  const adColors=[0x153d32,0x183c63,0x8c2630,0xb28b25,0x24313d,0x17624c];
+  // Grandes placas luminosas, voltadas para dentro do campo e fáceis de enxergar durante o jogo.
+  const signs=[
+    ["MORAIS FOOTBALL","FUTEBOL 3D ARCADE","#e2b936"],
+    ["JOGUE COM RAÇA","MORAIS FC","#e34b43"],
+    ["RESPEITO AO JOGO","PAIXÃO PELO FUTEBOL","#28a878"],
+    ["MORAIS FC","A CASA DO FUTEBOL","#347fd0"]
+  ];
   for(const side of [-1,1]){
-    for(let i=0;i<10;i++){
-      const x=-45+i*10;
-      const board=addBox(scene,9.35,.82,.38,adColors[i%adColors.length],x,.48,side*33.05);
-      board.material.roughness=.45;
-      const trim=addBox(scene,9.35,.07,.42,0xe5d7a2,x,.91,side*33.05);
-      trim.castShadow=false;
+    for(let i=0;i<4;i++){
+      const x=-37+i*24.5;
+      const panel=addBox(scene,22,1.65,.42,0xffffff,x,1.12,side*33.0);
+      panel.material=new THREE.MeshBasicMaterial({map:stadiumSignTexture(...signs[(i+(side===1?1:0))%signs.length]),toneMapped:false});
+      panel.material.side=THREE.DoubleSide;
+      addBox(scene,22.25,.12,.55,0xd8b33e,x,.22,side*33.0);
+      for(const postX of [x-9.7,x+9.7])addBox(scene,.22,.75,.35,0x263541,postX,.35,side*33.0);
     }
-    // Área técnica e bancos das equipes
-    const benchX=side===-1?-18:18;
-    addBox(scene,13,.18,2.1,0x263b48,benchX,.28,side*37.2);
-    addBox(scene,13,.16,2.1,0x172833,benchX,1.85,side*37.2);
+    // Banco de reservas maior, com cobertura colorida e assentos individuais.
+    const bx=side===-1?-17:17,bz=side*38.1;
+    addBox(scene,17,.28,3.4,0x172b3a,bx,.28,bz);
+    addBox(scene,17,.35,3.8,side===-1?0x9d2937:0x245c9a,bx,2.75,bz);
+    addBox(scene,.22,2.4,3.7,0x647987,bx-8.2,1.45,bz);
+    addBox(scene,.22,2.4,3.7,0x647987,bx+8.2,1.45,bz);
+    for(let n=0;n<8;n++){
+      const sx=bx-7+n*2;
+      addBox(scene,1.45,.24,1.05,n%2?0x315b4b:0x344c60,sx,.92,bz);
+      addBox(scene,1.45,.95,.18,0x243b49,sx,1.48,bz-side*.48);
+    }
+  }
+  // Bandeiras grandes nos quatro escanteios, com cores fortes.
+  for(const x of [-49.3,49.3])for(const z of [-31.3,31.3]){
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.09,3.15,10),mat(0xf5f3e9,.35));
+    pole.position.set(x,1.57,z);pole.castShadow=true;scene.add(pole);
+    const flag=new THREE.Mesh(new THREE.PlaneGeometry(1.25,.72),new THREE.MeshBasicMaterial({color:(x*z)>0?0xffd43b:0xf04444,side:THREE.DoubleSide}));
+    flag.position.set(x+.58,2.7,z);flag.rotation.y=x>0?Math.PI:0;scene.add(flag);
+  }
+  // Placar principal com texto legível, voltado para o gramado.
+  const board=addBox(scene,19,5.4,.7,0x071827,0,15.2,-47.5);
+  const screen=new THREE.Mesh(new THREE.PlaneGeometry(18,4.5),new THREE.MeshBasicMaterial({map:stadiumSignTexture("MORAIS FC  0  x  0","FUTEBOL 3D  •  JOGUE COM RAÇA","#e2b936"),toneMapped:false,side:THREE.DoubleSide}));
+  screen.position.set(0,15.2,-47.08);scene.add(screen);
+  // Torres de iluminação altas e visíveis nos quatro cantos do estádio.
+  for(const x of [-54,54])for(const z of [-42,42]){
+    const mast=new THREE.Mesh(new THREE.CylinderGeometry(.2,.34,20,10),mat(0x65717b,.6));
+    mast.position.set(x,10,z);mast.castShadow=true;scene.add(mast);
+    addBox(scene,4,.55,1.4,0x263541,x,20,z);
     for(let n=0;n<7;n++){
-      const seat=addBox(scene,1.35,.22,.72,n%2?0x315b4b:0x344c60,benchX-5.4+n*1.8,.82,side*37.2);
-      seat.castShadow=false;
-      const back=addBox(scene,1.35,.72,.12,0x243b49,benchX-5.4+n*1.8,1.25,side*37.2-side*.32);
-      back.castShadow=false;
-    }
-    // Linhas da área técnica
-    line(scene,[[benchX-8,.06,side*34.2],[benchX+8,.06,side*34.2],[benchX+8,.06,side*39.4],[benchX-8,.06,side*39.4],[benchX-8,.06,side*34.2]],0xdce5df,.7);
-  }
-  // Bandeirinhas de escanteio com haste e tecido triangular
-  for(const x of [-49.35,49.35])for(const z of [-31.35,31.35]){
-    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.045,.055,2.25,8),mat(0xf2f0df,.4));
-    pole.position.set(x,1.12,z);pole.castShadow=true;scene.add(pole);
-    const flagGeo=new THREE.BufferGeometry();
-    flagGeo.setAttribute('position',new THREE.Float32BufferAttribute([0,2.12,0,.95,1.82,0,0,1.5,0],3));
-    flagGeo.setIndex([0,1,2]);flagGeo.computeVertexNormals();
-    const flag=new THREE.Mesh(flagGeo,new THREE.MeshStandardMaterial({color:(x*z)>0?0xe7c947:0xe84a42,side:THREE.DoubleSide,roughness:.8}));
-    flag.position.set(x,.12,z);scene.add(flag);
-  }
-  // Túneis de acesso dos jogadores atrás dos gols
-  for(const side of [-1,1]){
-    const x=side*56.5;
-    addBox(scene,2.4,3.5,8,0x111d27,x,1.75,0);
-    addBox(scene,2.55,.22,8.2,0x435462,x,3.55,0);
-    addBox(scene,.16,3.2,8.1,0x667783,x-side*1.15,1.6,0);
-  }
-  // Placar eletrônico com moldura e tela luminosa
-  addBox(scene,1.35,5.2,17.5,0x0c1721,0,15.1,-48.5);
-  const screen=new THREE.Mesh(new THREE.PlaneGeometry(15.8,3.8),new THREE.MeshBasicMaterial({color:0x102f36}));
-  screen.position.set(.72,15.25,-48.5);screen.rotation.y=Math.PI/2;scene.add(screen);
-  // Refletores adicionais nos cantos, com luminárias emissivas leves
-  for(const x of [-52,52])for(const z of [-43,43]){
-    const mast=new THREE.Mesh(new THREE.CylinderGeometry(.22,.34,17,8),mat(0x43515b,.65));
-    mast.position.set(x,8.5,z);mast.castShadow=true;scene.add(mast);
-    const bar=addBox(scene,2.6,.45,1.1,0x253541,x,17.2,z);
-    for(let n=0;n<5;n++){
-      const lamp=new THREE.Mesh(new THREE.BoxGeometry(.32,.18,.12),new THREE.MeshBasicMaterial({color:0xfff0c7}));
-      lamp.position.set(x-1+n*.5,17.2,z);scene.add(lamp);
+      const lamp=new THREE.Mesh(new THREE.BoxGeometry(.38,.22,.12),new THREE.MeshBasicMaterial({color:0xfff4d0}));
+      lamp.position.set(x-1.45+n*.48,20,z);scene.add(lamp);
     }
   }
 }
+
 function makePlayer(id,team,role,x,z,players,scene){
   const group=new THREE.Group();
   const homeColor=team===0?0xe5c83e:0xf2f2ed;
