@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-12";
-import { BallPhysics } from "./physics.js?v=mf-v1-12";
-import { Controls } from "./controls.js?v=mf-v1-12";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-12";
-import { Match } from "./match.js?v=mf-v1-12";
+import { createScene } from "./scene.js?v=mf-v1-13";
+import { BallPhysics } from "./physics.js?v=mf-v1-13";
+import { Controls } from "./controls.js?v=mf-v1-13";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-13";
+import { Match } from "./match.js?v=mf-v1-13";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[{"id":"flamengo","name":"Flamengo","short":"FLA","mascot":"Urubu","emoji":"🦅","shirt":11999533,"shorts":1513239},{"id":"corinthians","name":"Corinthians","short":"COR","mascot":"Mosqueteiro","emoji":"⚔️","shirt":15856107,"shorts":1513239},{"id":"palmeiras","name":"Palmeiras","short":"PAL","mascot":"Porco","emoji":"🐷","shirt":554051,"shorts":15856107},{"id":"saopaulo","name":"São Paulo","short":"SPFC","mascot":"Santo Paulo","emoji":"⭐","shirt":16052456,"shorts":1513239},{"id":"santos","name":"Santos","short":"SAN","mascot":"Peixe","emoji":"🐟","shirt":16053485,"shorts":1513239},{"id":"gremio","name":"Grêmio","short":"GRE","mascot":"Mosqueteiro","emoji":"⚔️","shirt":2440579,"shorts":15856107},{"id":"internacional","name":"Internacional","short":"INT","mascot":"Saci","emoji":"🧢","shirt":12918316,"shorts":15856107},{"id":"atleticomg","name":"Atlético-MG","short":"CAM","mascot":"Galo","emoji":"🐓","shirt":2105376,"shorts":15856107},{"id":"cruzeiro","name":"Cruzeiro","short":"CRU","mascot":"Raposa","emoji":"🦊","shirt":1461146,"shorts":15856107},{"id":"vasco","name":"Vasco","short":"VAS","mascot":"Almirante","emoji":"🏴‍☠️","shirt":1513239,"shorts":15856107}];
