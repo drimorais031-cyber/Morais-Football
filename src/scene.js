@@ -223,7 +223,7 @@ function makePlayer(id,team,role,x,z,players,scene){
 export function createScene(){
   const scene=new THREE.Scene();scene.background=new THREE.Color(0x7899b4);scene.fog=new THREE.Fog(0x7899b4,145,230);
   const camera=new THREE.PerspectiveCamera(49,innerWidth/innerHeight,.1,300);
-  camera.position.set(0,48,60);
+  camera.position.set(0,76,112);camera.lookAt(0,2,0);
   const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
