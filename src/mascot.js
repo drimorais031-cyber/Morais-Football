@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 // Mascote esportivo 3D estilizado, com rig simples e membros articulados.
 export function createIntroMascot(container){
@@ -32,7 +31,7 @@ export function createIntroMascot(container){
     m.position.set(...pos);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
   };
   const box=(parent,size,material,pos,round=.06)=>{
-    const bevel=Math.min(round,Math.min(...size)*.44);const g=new RoundedBoxGeometry(...size,5,bevel);const m=new THREE.Mesh(g,material);
+    const g=new THREE.BoxGeometry(...size);const m=new THREE.Mesh(g,material);
     m.position.set(...pos);m.castShadow=true;parent.add(m);return m;
   };
   const character=new THREE.Group();scene.add(character);character.position.y=-.13;
@@ -53,8 +52,8 @@ export function createIntroMascot(container){
   box(character,[.22,.34,.445],red2,[-.18,1.13,.012],.05);
   box(character,[.22,.34,.445],red2,[.18,1.13,.012],.05);
   // Cabeça maior e expressiva, separada do tronco para acompanhar a ação.
-  const head=new THREE.Group();head.position.set(0,2.22,0);character.add(head);
-  capsule(head,.105,.24,skin,[0,.12,0]);
+  const head=new THREE.Group();head.position.set(0,2.1,0);character.add(head);
+  capsule(head,.105,.12,skin,[0,.12,0]);
   sphere(head,.34,skin,[0,.42,.015],[.91,1.04,.88]);
   // Orelhas
   sphere(head,.085,skin,[-.31,.42,0],[.55,1,.72]);sphere(head,.085,skin,[.31,.42,0],[.55,1,.72]);
@@ -98,13 +97,13 @@ export function createIntroMascot(container){
     capsule(knee,.115,.43,white,[0,-.22,0]);
     const sockBand=new THREE.Mesh(new THREE.TorusGeometry(.108,.018,8,20),red);
     sockBand.position.set(0,-.12,0);knee.add(sockBand);
-    const shinGuard=sphere(knee,.075,red2,[0,-.22,.105],[.9,1.45,.32]);
+    const shinGuard=box(knee,[.12,.22,.045],red2,[0,-.22,.105],.025);
     const boot=new THREE.Group();boot.position.set(0,-.47,.045);knee.add(boot);
     const shoe=box(boot,[.25,.145,.43],red2,[0,-.02,.115],.065);
     const toe=sphere(boot,.12,black,[0,-.015,.28],[1,.58,1.1]);
     box(boot,[.255,.035,.44],sole,[0,-.095,.115],.025);
     // pequenas travas
-    for(let s=-1;s<=1;s++)for(let z=0;z<2;z++)sphere(boot,.022,gold,[s*.075,-.13,.02+z*.18],[1,.7,1]);
+    for(let s=-1;s<=1;s++)for(let z=0;z<2;z++)box(boot,[.035,.035,.045],gold,[s*.075,-.12,.02+z*.18],.01);
     legs.push({hip,knee,boot,side});
   }
   // Sombra elíptica para ancorar o personagem no gramado.
