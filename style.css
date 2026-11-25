@@ -41,3 +41,34 @@
 @keyframes ballToCamera{0%{opacity:0;transform:translate(-50%,0) scale(.35)}12%{opacity:1}65%{opacity:1;transform:translate(20vw,-20vh) scale(4) rotate(300deg)}100%{opacity:0;transform:translate(45vw,-44vh) scale(12) rotate(720deg)}}
 @media(max-height:480px){#introMascot{height:58vh;width:min(28vw,220px);bottom:4%}.intro-copy{top:5%}#introSkip{bottom:8px;right:10px}}
 @media(prefers-reduced-motion:reduce){#introMascot,.intro-ball{animation-duration:.2s}#intro{animation-duration:.2s}}
+
+/* v1.18: chute com preparação, transferência de peso e impacto na câmera */
+#intro{perspective:1000px;transform-origin:50% 50%;isolation:isolate}
+#intro.intro-impact{animation:introCameraHit .42s ease-out both}
+#intro.intro-impact:after{content:"";position:absolute;z-index:5;inset:0;background:#fff;pointer-events:none;animation:cameraFlash .38s ease-out both}
+#introMascot{transform-origin:50% 88%;animation:mascotFullKick 3.65s cubic-bezier(.2,.72,.18,1) .3s both;will-change:transform,filter}
+#introMascot:after{content:""}
+.intro-ball{bottom:13%;left:50%;width:clamp(30px,4.4vw,54px);background:radial-gradient(circle at 30% 25%,#fff 0 17%,#e9eceb 18% 42%,#20282a 43% 48%,#fff 49% 68%,#aeb8b6 69% 73%,#f8f8f4 74%);border:1px solid #1118;transform-origin:center;animation:ballKickToLens 2.35s cubic-bezier(.12,.68,.16,1) 2.35s both;will-change:transform,opacity,filter}
+.intro-ball:before,.intro-ball:after{content:"";position:absolute;inset:18%;border:2px solid #252b2b;border-radius:35%;transform:rotate(28deg);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.intro-ball:after{inset:0;border:0;border-radius:50%;background:linear-gradient(110deg,transparent 35%,#ffffffa8 48%,transparent 61%);clip-path:none;transform:none}
+@keyframes mascotFullKick{
+  0%{opacity:0;transform:translate(-50%,45px) rotateX(0) rotateZ(-7deg) scale(.78);filter:drop-shadow(0 10px 12px #0008)}
+  18%{opacity:1;transform:translate(-50%,0) rotateZ(0) scale(1)}
+  35%{transform:translate(-50%,5px) rotateZ(-8deg) rotateY(-5deg) scale(1.02)}
+  49%{transform:translate(-50%,-7px) rotateZ(11deg) rotateY(7deg) scale(1.06)}
+  61%{transform:translate(-50%,4px) rotateZ(-3deg) scale(1.01)}
+  72%{transform:translate(-50%,0) rotateZ(0) scale(1)}
+  100%{transform:translate(-50%,0) rotateZ(0) scale(1)}
+}
+@keyframes ballKickToLens{
+  0%{opacity:0;transform:translate(-50%,0) translateZ(0) scale(.22) rotate(0)}
+  8%{opacity:1}
+  22%{opacity:1;transform:translate(-50%,-5vh) translateZ(80px) scale(.72) rotate(150deg)}
+  48%{opacity:1;transform:translate(-50%,-18vh) translateZ(260px) scale(2.7) rotate(430deg)}
+  72%{opacity:1;transform:translate(-50%,-36vh) translateZ(650px) scale(7) rotate(760deg);filter:blur(1px)}
+  100%{opacity:0;transform:translate(-50%,-55vh) translateZ(1100px) scale(15) rotate(1080deg);filter:blur(8px)}
+}
+@keyframes introCameraHit{0%{transform:translate(0,0) scale(1)}20%{transform:translate(-7px,3px) scale(1.015)}45%{transform:translate(6px,-3px) scale(1.01)}70%{transform:translate(-3px,2px) scale(1.005)}100%{transform:translate(0,0) scale(1)}}
+@keyframes cameraFlash{0%{opacity:0}18%{opacity:.92}100%{opacity:0}}
+@media(max-height:480px){.intro-ball{bottom:11%}}
+@media(prefers-reduced-motion:reduce){#introMascot,.intro-ball,#intro.intro-impact{animation-duration:.2s}}
