@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-16";
-import { BallPhysics } from "./physics.js?v=mf-v1-16";
-import { Controls } from "./controls.js?v=mf-v1-16";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-16";
-import { Match } from "./match.js?v=mf-v1-16";
+import { createScene } from "./scene.js?v=mf-v1-17";
+import { BallPhysics } from "./physics.js?v=mf-v1-17";
+import { Controls } from "./controls.js?v=mf-v1-17";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-17";
+import { Match } from "./match.js?v=mf-v1-17";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
@@ -38,6 +38,13 @@ function fillTeamSelects(){
  $("#homeTeam").addEventListener("change",refresh);$("#awayTeam").addEventListener("change",refresh);refresh();
 }
 fillTeamSelects();
+
+// Abertura cinematográfica: só libera a seleção depois da apresentação do estádio.
+const intro=$("#intro"),startScreen=$("#start");
+startScreen.style.display="none";
+function finishIntro(){if(!intro||intro.dataset.done==="1")return;intro.dataset.done="1";intro.classList.add("intro-out");setTimeout(()=>{intro.remove();startScreen.style.display="grid";},450)}
+$("#introSkip").addEventListener("click",finishIntro);
+setTimeout(finishIntro,5200);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
 const home=world.players.filter(p=>p.team===0);
 let active=3,charge=0,lastSwitch=0,shotPlayer=null,ballReleaseTimer=0;
