@@ -62,9 +62,11 @@ jobs:
           left=(original.width-side)//2
           top=(original.height-side)//2
           artwork=original.crop((left,top,left+side,top+side))
+          alpha=artwork.getchannel('A').getbbox()
+          if alpha: artwork=artwork.crop(alpha)
           artwork=artwork.filter(ImageFilter.UnsharpMask(radius=2,percent=150,threshold=3))
           foreground=Image.new('RGBA',(432,432),(0,0,0,0))
-          artwork.thumbnail((300,300),Image.Resampling.LANCZOS)
+          artwork.thumbnail((360,360),Image.Resampling.LANCZOS)
           foreground.alpha_composite(artwork,((432-artwork.width)//2,(432-artwork.height)//2))
           base=Path('android/app/src/main/res')
           (base/'mipmap-anydpi-v26').mkdir(parents=True,exist_ok=True)
