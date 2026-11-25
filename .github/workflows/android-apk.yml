@@ -68,8 +68,9 @@ jobs:
           foreground.alpha_composite(artwork,((432-artwork.width)//2,(432-artwork.height)//2))
           base=Path('android/app/src/main/res')
           (base/'mipmap-anydpi-v26').mkdir(parents=True,exist_ok=True)
+          (base/'drawable-nodpi').mkdir(parents=True,exist_ok=True)
           (base/'values').mkdir(parents=True,exist_ok=True)
-          foreground.save(base/'mipmap-anydpi-v26/mf_launcher_foreground.png')
+          foreground.save(base/'drawable-nodpi/mf_launcher_foreground.png')
           (base/'values/ic_launcher_background.xml').write_text('''<resources><color name="ic_launcher_background">#07152B</color></resources>''')
           for name in ('ic_launcher','ic_launcher_round'):
               (base/f'mipmap-anydpi-v26/{name}.xml').write_text('''<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/ic_launcher_background"/><foreground android:drawable="@drawable/mf_launcher_foreground"/></adaptive-icon>''')
