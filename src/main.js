@@ -1,9 +1,10 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-v1-18";
-import { BallPhysics } from "./physics.js?v=mf-v1-18";
-import { Controls } from "./controls.js?v=mf-v1-18";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-18";
-import { Match } from "./match.js?v=mf-v1-18";
+import { createScene } from "./scene.js?v=mf-v1-19";
+import { BallPhysics } from "./physics.js?v=mf-v1-19";
+import { Controls } from "./controls.js?v=mf-v1-19";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-19";
+import { Match } from "./match.js?v=mf-v1-19";
+import { createIntroMascot } from "./mascot.js?v=mf-v1-19";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
@@ -42,7 +43,8 @@ fillTeamSelects();
 // Abertura cinematográfica: só libera a seleção depois da apresentação do estádio.
 const intro=$("#intro"),startScreen=$("#start");
 startScreen.style.display="none";
-function finishIntro(){if(!intro||intro.dataset.done==="1")return;intro.dataset.done="1";intro.classList.add("intro-out");setTimeout(()=>{intro.remove();startScreen.style.display="grid";},450)}
+let introAnimation=createIntroMascot($("#intro3d"));
+function finishIntro(){if(!intro||intro.dataset.done==="1")return;intro.dataset.done="1";introAnimation?.dispose();introAnimation=null;intro.classList.add("intro-out");setTimeout(()=>{intro.remove();startScreen.style.display="grid";},450)}
 $("#introSkip").addEventListener("click",finishIntro);
 setTimeout(()=>intro?.classList.add("intro-impact"),4050);
 setTimeout(finishIntro,6500);
