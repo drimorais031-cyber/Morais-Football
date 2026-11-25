@@ -22,3 +22,22 @@
 #hud .crest b{font-size:7px;line-height:8px}
 .team-picks{gap:9px 12px}
 .team-picks select{min-height:42px}
+
+/* Abertura cinematográfica do Morais Football */
+#intro{position:absolute;z-index:12;inset:0;overflow:hidden;display:grid;place-items:center;background:linear-gradient(180deg,#06131a35,#06130d88 75%),linear-gradient(90deg,#06130d66,transparent 55%);pointer-events:auto;animation:introFadeIn .65s ease both}
+#intro:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 48%,transparent 10%,#02080655 85%);pointer-events:none}
+.intro-vignette{position:absolute;inset:0;background:linear-gradient(0deg,#020806a8,transparent 48%,#02080655)}
+.intro-copy{position:absolute;z-index:2;top:9%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;text-align:center;text-shadow:0 3px 16px #000;font-style:italic}
+.intro-copy span{font-size:clamp(10px,1.5vw,16px);letter-spacing:.48em;color:#e9d15c;font-weight:900}
+.intro-copy strong{font-size:clamp(28px,6vw,64px);letter-spacing:.04em;color:#fff}
+.intro-copy em{color:#f0d34d}
+.intro-copy small{font-size:clamp(9px,1.3vw,13px);letter-spacing:.32em;color:#e2e9e1;margin-top:8px}
+#introMascot{position:absolute;z-index:3;width:min(35vw,330px);height:min(58vh,390px);object-fit:contain;left:50%;bottom:7%;transform:translateX(-50%);filter:drop-shadow(0 12px 22px #000b);animation:mascotKick 2.65s cubic-bezier(.2,.75,.2,1) .35s both}
+.intro-ball{position:absolute;z-index:4;width:clamp(28px,5vw,58px);aspect-ratio:1;border-radius:50%;left:50%;bottom:31%;opacity:0;background:radial-gradient(circle at 32% 28%,#fff 0 22%,#d9dedc 24% 48%,#161b1b 50% 54%,#fff 57%);box-shadow:0 5px 14px #0009;animation:ballToCamera 2.2s cubic-bezier(.16,.7,.15,1) 1.65s both}
+#introSkip{position:absolute;z-index:6;right:18px;bottom:16px;padding:10px 14px;border:1px solid #ffffff88;border-radius:5px;background:#06130dbb;color:#fff;font-size:10px;font-weight:900;letter-spacing:1px}
+#intro.intro-out{opacity:0;transition:opacity .45s ease;pointer-events:none}
+@keyframes introFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes mascotKick{0%{transform:translateX(-50%) translateY(30px) scale(.82) rotate(-5deg);opacity:0}30%{opacity:1}58%{transform:translateX(-50%) translateY(0) scale(1) rotate(0)}68%{transform:translateX(-50%) translateY(-12px) scale(1.04) rotate(9deg)}82%{transform:translateX(-50%) translateY(3px) scale(.98) rotate(-2deg)}100%{transform:translateX(-50%) translateY(0) scale(1);opacity:1}}
+@keyframes ballToCamera{0%{opacity:0;transform:translate(-50%,0) scale(.35)}12%{opacity:1}65%{opacity:1;transform:translate(20vw,-20vh) scale(4) rotate(300deg)}100%{opacity:0;transform:translate(45vw,-44vh) scale(12) rotate(720deg)}}
+@media(max-height:480px){#introMascot{height:58vh;width:min(28vw,220px);bottom:4%}.intro-copy{top:5%}#introSkip{bottom:8px;right:10px}}
+@media(prefers-reduced-motion:reduce){#introMascot,.intro-ball{animation-duration:.2s}#intro{animation-duration:.2s}}
