@@ -8,3 +8,5 @@
 .crest{display:inline-grid;place-items:center;flex:none;width:38px;height:43px;color:var(--trim);font-size:10px;font-weight:1000;background:var(--crest);border:2px solid #e8dba4;clip-path:polygon(5% 0,95% 0,90% 72%,50% 100%,10% 72%)}
 #hud .crest{width:29px;height:33px;font-size:8px;vertical-align:middle}
 @media(max-height:480px){#start>div{padding:12px 18px}.brand{width:36px;height:36px}.brand+p{margin:7px 0}h1{margin:3px 0;font-size:25px}.team-picks{margin-top:8px;gap:5px 8px}.team-preview{min-height:38px}.team-preview .crest{width:29px;height:33px}#play{margin:9px 0 5px;padding:10px}}
+
+.brand{width:82px;height:82px;padding:0;overflow:hidden;border:2px solid #e7ce4d;border-radius:18px;background:#07120d;box-shadow:0 0 24px #e7ce4d55}.brand img{display:block;width:100%;height:100%;object-fit:cover}.start-panel{background-image:linear-gradient(#07150de8,#07150df0),url("./src/brand.js");}
