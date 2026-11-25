@@ -47,6 +47,27 @@ jobs:
               raise SystemExit('Não foi possível configurar a orientação horizontal.')
           p.write_text(s)
           PY
+      - name: Apply official app icon
+        run: |
+          python3 -m pip install pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          import base64, re, io
+          source=Path('src/brand.js').read_text()
+          encoded=re.search(r'base64,([^\" ]+)', source).group(1)
+          image=Image.open(io.BytesIO(base64.b64decode(encoded))).convert('RGBA')
+          for density,size in [('mdpi',48),('hdpi',72),('xhdpi',96),('xxhdpi',144),('xxxhdpi',192)]:
+              folder=Path(f'android/app/src/main/res/mipmap-{density}')
+              folder.mkdir(parents=True,exist_ok=True)
+              icon=image.resize((size,size),Image.Resampling.LANCZOS)
+              icon.save(folder/'ic_launcher.png')
+              mask=Image.new('L',(size,size),0); ImageDraw.Draw(mask).ellipse((0,0,size-1,size-1),fill=255)
+              round_icon=icon.copy(); round_icon.putalpha(mask); round_icon.save(folder/'ic_launcher_round.png')
+          adaptive=Path('android/app/src/main/res/mipmap-anydpi-v26')
+          adaptive.mkdir(parents=True,exist_ok=True)
+          image.resize((432,432),Image.Resampling.LANCZOS).save(adaptive/'ic_launcher_foreground.png')
+          PY
       - name: Build debug APK
         run: |
           cd android
