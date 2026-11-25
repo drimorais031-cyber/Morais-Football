@@ -75,83 +75,59 @@ function createGoal(scene,side){
   // Placa de base e suportes discretos
   for(const z of [-7,7])addBox(scene,3.2,.13,.13,0xd9dedb,x+side*1.5,.08,z);
 }
-function createBowlRing(scene,innerX,innerZ,outerX,outerZ,y,height,color,segments=128){
-  const positions=[],indices=[];
-  for(let i=0;i<=segments;i++){
-    const angle=i/segments*Math.PI*2;
-    const c=Math.cos(angle),sn=Math.sin(angle);
-    positions.push(innerX*c,y,innerZ*sn,outerX*c,y+height,outerZ*sn);
-  }
-  for(let i=0;i<segments;i++){
-    const n=i*2;indices.push(n,n+1,n+3,n,n+3,n+2);
-  }
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
-  geo.setIndex(indices);geo.computeVertexNormals();
-  const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:.92,side:THREE.DoubleSide}));
-  mesh.receiveShadow=true;mesh.castShadow=true;scene.add(mesh);return mesh;
-}
 function createStadium(scene){
-  // Arena oval inspirada no Maracanã: anéis contínuos de arquibancadas ao redor do gramado.
-  const tiers=[
-    {ix:53,iz:35,ox:60,oz:41,y:1.4,h:3.4,c:0x263c50},
-    {ix:60,iz:41,ox:67,oz:46,y:4.8,h:4.1,c:0x354d61},
-    {ix:67,iz:46,ox:73,oz:50,y:8.9,h:4.3,c:0x263847}
-  ];
-  for(const t of tiers){
-    createBowlRing(scene,t.ix,t.iz,t.ox,t.oz,t.y,t.h,t.c);
-    // Faixas de assentos em cores alternadas, formando setores visíveis.
-    for(let row=0;row<4;row++){
-      const radiusX=t.ix+(t.ox-t.ix)*(row+.5)/4;
-      const radiusZ=t.iz+(t.oz-t.iz)*(row+.5)/4;
-      const colors=[0x1c4f83,0xd8dce0,0x2d8a55,0xc43b3b,0xd4b13c,0x24313d];
-      for(let seg=0;seg<48;seg++){
-        const angle=seg/48*Math.PI*2;
-        const seat=addBox(scene,2.0,.28,.72,colors[(seg+row*2)%colors.length],
-          Math.cos(angle)*radiusX,t.y+1.05+row*.62,Math.sin(angle)*radiusZ);
-        seat.rotation.y=-angle;seat.castShadow=false;
-      }
+  // Estádio retangular e compacto, inspirado na Vila Belmiro.
+  // Arquibancadas próximas ao campo, quatro lados definidos e cobertura simples.
+  const standMat=mat(0x263847,.9);
+  const seatColors=[0x263f59,0x315f85,0xd7dce0,0x2c7658,0xb83d3d];
+  // Laterais: arquibancadas em degraus acompanhando o comprimento do gramado.
+  for(const side of [-1,1]){
+    const z=side*41;
+    addBox(scene,108,7,15,0x263847,0,4.0,z);
+    for(let row=0;row<6;row++){
+      const y=1.45+row*1.02;
+      const depth=1.55;
+      const seat=addBox(scene,103-row*.9,.42,depth,seatColors[row%seatColors.length],0,y,side*(34.8+row*1.75));
+      seat.castShadow=false;
+    }
+    // Cobertura reta, com estrutura metálica aparente.
+    addBox(scene,112,.85,17,0x172733,0,13.2,side*42.5);
+    for(const x of [-49,-25,0,25,49]){
+      const pillar=new THREE.Mesh(new THREE.BoxGeometry(.75,10,.85),mat(0x657786,.72));
+      pillar.position.set(x,6.5,side*48.3);pillar.castShadow=true;scene.add(pillar);
+    }
+    addBox(scene,108,.28,.35,0xd6b23d,0,9.9,side*33.8);
+  }
+  // Fundos atrás dos gols: arquibancadas mais curtas, mantendo o formato quadrado.
+  for(const side of [-1,1]){
+    const x=side*59;
+    addBox(scene,15,7,70,0x263847,x,4.0,0);
+    for(let row=0;row<6;row++){
+      const y=1.45+row*1.02;
+      addBox(scene,1.55,.42,65-row*.8,seatColors[(row+1)%seatColors.length],side*(51.8+row*1.75),y,0).castShadow=false;
+    }
+    addBox(scene,17,.85,74,0x172733,side*59,13.2,0);
+    for(const z of [-29,-14,0,14,29]){
+      const pillar=new THREE.Mesh(new THREE.BoxGeometry(.85,10,.75),mat(0x657786,.72));
+      pillar.position.set(side*67.2,6.5,z);pillar.castShadow=true;scene.add(pillar);
     }
   }
-  // Anel superior e cobertura leve em segmentos, preservando o céu aberto sobre o gramado.
-  createBowlRing(scene,70,48,77,54,13.4,1.1,0x182733);
-  for(let i=0;i<32;i++){
-    const a=i/32*Math.PI*2;
-    const x=Math.cos(a),z=Math.sin(a);
-    const roof=new THREE.Mesh(new THREE.BoxGeometry(15,1.15,9),mat(0x172632,.7));
-    roof.position.set(x*68,19.2,z*47);
-    roof.rotation.y=-a;scene.add(roof);
-    const support=new THREE.Mesh(new THREE.CylinderGeometry(.32,.48,14,8),mat(0x344653,.72));
-    support.position.set(x*73,9.5,z*51);support.castShadow=true;scene.add(support);
-  }
-  // Fachada externa monumental com pilares e vãos iluminados.
-  createBowlRing(scene,77,54,80,57,0,7.5,0x1d2d3a);
-  for(let i=0;i<48;i++){
-    const a=i/48*Math.PI*2;
-    const pillar=new THREE.Mesh(new THREE.BoxGeometry(1.05,8.5,1.4),mat(i%2?0x536675:0x344a5a,.75));
-    pillar.position.set(Math.cos(a)*78.5,4.2,Math.sin(a)*55.8);
-    pillar.rotation.y=-a;pillar.castShadow=true;scene.add(pillar);
-    const light=new THREE.Mesh(new THREE.BoxGeometry(2.2,.22,.16),new THREE.MeshBasicMaterial({color:0xffe5a1}));
-    light.position.set(Math.cos(a)*79,7.1,Math.sin(a)*56);light.rotation.y=-a;scene.add(light);
-  }
-  // Torres e refletores altos ao redor da arena.
-  for(let i=0;i<8;i++){
-    const a=i/8*Math.PI*2;
-    const x=Math.cos(a)*81,z=Math.sin(a)*59;
-    const mast=new THREE.Mesh(new THREE.CylinderGeometry(.22,.42,24,10),mat(0x56636c,.62));
-    mast.position.set(x,12,z);mast.castShadow=true;scene.add(mast);
-    const rig=addBox(scene,5,.65,2.1,0x263541,x,24.2,z);
-    for(let n=0;n<9;n++){
-      const lamp=new THREE.Mesh(new THREE.BoxGeometry(.38,.22,.12),new THREE.MeshBasicMaterial({color:0xfff4d0}));
-      lamp.position.set(x-2+n*.5,24,z);scene.add(lamp);
+  // Torres de iluminação nos quatro cantos.
+  for(const x of [-1,1])for(const z of [-1,1]){
+    const px=x*69,pz=z*51;
+    const mast=new THREE.Mesh(new THREE.BoxGeometry(.65,22,.65),mat(0x596873,.65));
+    mast.position.set(px,11,pz);mast.castShadow=true;scene.add(mast);
+    addBox(scene,5,.55,1.6,0x263541,px,22.2,pz);
+    for(let n=0;n<7;n++){
+      const lamp=new THREE.Mesh(new THREE.BoxGeometry(.42,.22,.12),new THREE.MeshBasicMaterial({color:0xfff2cf}));
+      lamp.position.set(px-1.8+n*.6,22,pz);scene.add(lamp);
     }
   }
-  // Painel de placar elevado no anel de arquibancadas.
-  addBox(scene,1.2,5.2,18,0x071827,0,17,-53);
-  const scoreFace=new THREE.Mesh(new THREE.PlaneGeometry(16,4),new THREE.MeshBasicMaterial({color:0x123a42,side:THREE.DoubleSide}));
-  scoreFace.position.set(0,17,-52.35);scene.add(scoreFace);
+  // Placar no fundo, acima da arquibancada.
+  addBox(scene,1.1,5.4,17,0x071827,0,16,-55);
+  const scoreFace=new THREE.Mesh(new THREE.PlaneGeometry(15,4.2),new THREE.MeshBasicMaterial({color:0x123a42,side:THREE.DoubleSide}));
+  scoreFace.position.set(0,16,-54.35);scene.add(scoreFace);
 }
-
 function stadiumSignTexture(title,subtitle,color){
   const canvas=document.createElement("canvas");canvas.width=1024;canvas.height=256;
   const ctx=canvas.getContext("2d");
