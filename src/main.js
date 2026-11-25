@@ -6,9 +6,30 @@ import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-13";
 import { Match } from "./match.js?v=mf-v1-13";
 
 const $=s=>document.querySelector(s);
-const TEAMS=[{"id":"flamengo","name":"Flamengo","short":"FLA","mascot":"Urubu","emoji":"🦅","shirt":11999533,"shorts":1513239},{"id":"corinthians","name":"Corinthians","short":"COR","mascot":"Mosqueteiro","emoji":"⚔️","shirt":15856107,"shorts":1513239},{"id":"palmeiras","name":"Palmeiras","short":"PAL","mascot":"Porco","emoji":"🐷","shirt":554051,"shorts":15856107},{"id":"saopaulo","name":"São Paulo","short":"SPFC","mascot":"Santo Paulo","emoji":"⭐","shirt":16052456,"shorts":1513239},{"id":"santos","name":"Santos","short":"SAN","mascot":"Peixe","emoji":"🐟","shirt":16053485,"shorts":1513239},{"id":"gremio","name":"Grêmio","short":"GRE","mascot":"Mosqueteiro","emoji":"⚔️","shirt":2440579,"shorts":15856107},{"id":"internacional","name":"Internacional","short":"INT","mascot":"Saci","emoji":"🧢","shirt":12918316,"shorts":15856107},{"id":"atleticomg","name":"Atlético-MG","short":"CAM","mascot":"Galo","emoji":"🐓","shirt":2105376,"shorts":15856107},{"id":"cruzeiro","name":"Cruzeiro","short":"CRU","mascot":"Raposa","emoji":"🦊","shirt":1461146,"shorts":15856107},{"id":"vasco","name":"Vasco","short":"VAS","mascot":"Almirante","emoji":"🏴‍☠️","shirt":1513239,"shorts":15856107}];
+const TEAMS=[
+{id:"flamengo",name:"Flamengo",short:"FLA",mascot:"Urubu",emoji:"🦅",shirt:11999533,shorts:1513239},
+{id:"corinthians",name:"Corinthians",short:"COR",mascot:"Mosqueteiro",emoji:"⚔️",shirt:15856107,shorts:1513239},
+{id:"palmeiras",name:"Palmeiras",short:"PAL",mascot:"Porco",emoji:"🐷",shirt:554051,shorts:15856107},
+{id:"saopaulo",name:"São Paulo",short:"SPFC",mascot:"Santo Paulo",emoji:"⭐",shirt:16052456,shorts:1513239},
+{id:"santos",name:"Santos",short:"SAN",mascot:"Peixe",emoji:"🐟",shirt:16053485,shorts:1513239},
+{id:"gremio",name:"Grêmio",short:"GRE",mascot:"Mosqueteiro",emoji:"⚔️",shirt:2440579,shorts:15856107},
+{id:"internacional",name:"Internacional",short:"INT",mascot:"Saci",emoji:"🧢",shirt:12918316,shorts:15856107},
+{id:"atleticomg",name:"Atlético-MG",short:"CAM",mascot:"Galo",emoji:"🐓",shirt:2105376,shorts:15856107},
+{id:"cruzeiro",name:"Cruzeiro",short:"CRU",mascot:"Raposa",emoji:"🦊",shirt:1461146,shorts:15856107},
+{id:"vasco",name:"Vasco",short:"VAS",mascot:"Almirante",emoji:"🏴‍☠️",shirt:1513239,shorts:15856107},
+{id:"botafogo",name:"Botafogo",short:"BOT",mascot:"Manequinho",emoji:"⭐",shirt:1513239,shorts:15856107},
+{id:"fluminense",name:"Fluminense",short:"FLU",mascot:"Cartola",emoji:"🎩",shirt:7416360,shorts:1513239},
+{id:"athletico",name:"Athletico-PR",short:"CAP",mascot:"Furacão",emoji:"🌪️",shirt:14417920,shorts:1513239},
+{id:"bahia",name:"Bahia",short:"BAH",mascot:"Super-Homem",emoji:"🦸",shirt:1644825,shorts:15856107},
+{id:"fortaleza",name:"Fortaleza",short:"FOR",mascot:"Leão",emoji:"🦁",shirt:14417920,shorts:1644825},
+{id:"ceara",name:"Ceará",short:"CEA",mascot:"Vovô",emoji:"🖤",shirt:1513239,shorts:15856107},
+{id:"sport",name:"Sport",short:"SPO",mascot:"Leão",emoji:"🦁",shirt:1513239,shorts:14417920},
+{id:"vitoria",name:"Vitória",short:"VIT",mascot:"Leão",emoji:"🦁",shirt:14417920,shorts:1513239},
+{id:"bragantino",name:"RB Bragantino",short:"RBB",mascot:"Toro Loko",emoji:"🐂",shirt:1513239,shorts:15856107},
+{id:"goias",name:"Goiás",short:"GOI",mascot:"Periquito",emoji:"🦜",shirt:554051,shorts:1513239}
+];
 const teamById=id=>TEAMS.find(t=>t.id===id)||TEAMS[0];
-function crest(team){return '<span class="crest" style="--crest:'+('#'+team.shirt.toString(16).padStart(6,"0"))+';--trim:'+('#'+team.shorts.toString(16).padStart(6,"0"))+'">'+team.short+'</span>'}
+function crest(team){return '<span class="crest" role="img" aria-label="Escudo estilizado do '+team.name+'" style="--crest:#'+team.shirt.toString(16).padStart(6,"0")+' ;--trim:#'+team.shorts.toString(16).padStart(6,"0")+'"><span class="crest-mascot">'+team.emoji+'</span><b>'+team.short+'</b></span>'}
 function preview(id,target){const t=teamById(id);$(target).innerHTML=crest(t)+'<span><b>'+t.name+'</b><small>'+t.emoji+' Mascote: '+t.mascot+'</small></span>'}
 function fillTeamSelects(){
  for(const id of ["#homeTeam","#awayTeam"]){$(id).innerHTML=TEAMS.map(t=>'<option value="'+t.id+'">'+t.name+'</option>').join("")}
