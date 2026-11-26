@@ -4,7 +4,6 @@ import { BallPhysics } from "./physics.js?v=mf-v1-22";
 import { Controls } from "./controls.js?v=mf-v1-22";
 import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-v1-22";
 import { Match } from "./match.js?v=mf-v1-22";
-import { createIntroMascot } from "./mascot.js?v=mf-v1-22";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
@@ -43,11 +42,16 @@ fillTeamSelects();
 // Abertura cinematográfica: só libera a seleção depois da apresentação do estádio.
 const intro=$("#intro"),startScreen=$("#start");
 startScreen.style.display="none";
-let introAnimation=createIntroMascot($("#intro3d"));
-function finishIntro(){if(!intro||intro.dataset.done==="1")return;intro.dataset.done="1";introAnimation?.dispose();introAnimation=null;intro.classList.add("intro-out");setTimeout(()=>{intro.remove();startScreen.style.display="grid";},450)}
+const introVideo=$("#introVideo");
+if(introVideo){
+  introVideo.src="./assets/morais-intro.mp4";
+  introVideo.addEventListener("ended",finishIntro,{once:true});
+  introVideo.addEventListener("error",()=>{say("Vídeo de abertura não encontrado");setTimeout(finishIntro,900)},{once:true});
+  introVideo.play().catch(()=>{});
+}
+function finishIntro(){if(!intro||intro.dataset.done==="1")return;intro.dataset.done="1";introVideo?.pause();intro.classList.add("intro-out");setTimeout(()=>{intro.remove();startScreen.style.display="grid";},450)}
 $("#introSkip").addEventListener("click",finishIntro);
-setTimeout(()=>intro?.classList.add("intro-impact"),4050);
-setTimeout(finishIntro,6500);
+setTimeout(finishIntro,9800);
 const world=createScene(),controls=new Controls(),ball=new BallPhysics(world.ball),clock=new THREE.Clock();
 const home=world.players.filter(p=>p.team===0);
 let active=3,charge=0,lastSwitch=0,shotPlayer=null,ballReleaseTimer=0;
