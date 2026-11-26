@@ -44,6 +44,14 @@ const intro=$("#intro"),startScreen=$("#start");
 startScreen.style.display="none";
 const introVideo=$("#introVideo");
 if(introVideo){
+  const introVideoBg=introVideo.cloneNode(false);
+  introVideoBg.id="introVideoBg";
+  introVideoBg.removeAttribute("aria-label");
+  introVideoBg.setAttribute("loop","");
+  introVideoBg.setAttribute("tabindex","-1");
+  intro.insertBefore(introVideoBg,introVideo);
+  introVideoBg.src="./assets/morais-intro.mp4";
+  introVideoBg.play().catch(()=>{});
   introVideo.src="./assets/morais-intro.mp4";
   introVideo.addEventListener("ended",finishIntro,{once:true});
   introVideo.addEventListener("error",()=>{say("Vídeo de abertura não encontrado");setTimeout(finishIntro,900)},{once:true});
