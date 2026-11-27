@@ -119,7 +119,7 @@ function movePlayer(player,dt,input,controlled){
       player.currentModelAction=next;
     }
     player.mixer.update(dt);
-    if((player.action==="pass"||player.action==="shoot"||player.action==="celebrate")&&player.actionTime>(player.action==="celebrate"?1.0:.62))player.action="idle";
+    if((player.action==="pass"||player.action==="shoot"||player.action==="celebrate")&&player.actionTime>(player.action==="celebrate"?2.4:.62))player.action="idle";
   } else {
     player.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(player.phase+(i*Math.PI))*Math.min(.72,speed*.085)});
     player.arms?.forEach((arm,i)=>{arm.rotation.x=moving?Math.sin(player.phase+(i===0?0:Math.PI))*.42:0;});
@@ -129,7 +129,7 @@ function movePlayer(player,dt,input,controlled){
       if(player.arms?.[0])player.arms[0].rotation.x-=kick*.5;
       if(t>=1)player.action="idle";
     } else if(player.action==="celebrate"){
-      const t=Math.min(1,player.actionTime/1.0),raise=Math.sin(t*Math.PI);
+      const t=Math.min(1,player.actionTime/2.4),raise=Math.sin(t*Math.PI);
       player.arms?.forEach((a,i)=>{a.rotation.z=(i===0?1:-1)*raise*1.35;});
       if(t>=1)player.action="idle";
     }
@@ -178,9 +178,10 @@ function loop(){
   }
   ball.update(dt,world.players,team=>{
     match.goal(team);
-    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;});
     ball.reset();
     resetKickoff();
+    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;});
+    say("GOL! COMEMORAÇÃO!");
   });
   $("#power").style.width=charge+"%";
   $("#powerValue").textContent=Math.round(charge)+"%";
