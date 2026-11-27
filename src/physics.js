@@ -8,14 +8,32 @@ export class BallPhysics {
     this.radius = .42;
     this.cooldown = 0;
     this.lastTouch = -1;
+    this.targetPlayerId = -1;
   }
 
-  kick(direction, power, lift = .4, playerId = -1) {
+  kick(direction, power, lift = .4, playerId = -1, receiverId = -1) {
     const length = Math.hypot(direction.x, direction.z) || 1;
     this.v.x = direction.x / length * power;
     this.v.z = direction.z / length * power;
     this.v.y = lift;
     this.lastTouch = playerId;
+    this.targetPlayerId = receiverId;
+  }
+
+  trapAtPlayer(player) {
+    const p = this.mesh.position;
+    const moving = Math.hypot(player.velocity?.x || 0, player.velocity?.z || 0) > .35;
+    const angle = moving
+      ? Math.atan2(player.velocity.x, player.velocity.z)
+      : player.mesh.rotation.y;
+    p.x = player.mesh.position.x + Math.sin(angle) * .88;
+    p.z = player.mesh.position.z + Math.cos(angle) * .88;
+    p.y = this.radius;
+    this.v.x = 0;
+    this.v.y = 0;
+    this.v.z = 0;
+    this.lastTouch = player.id;
+    this.targetPlayerId = -1;
   }
 
   collideWithFrame(p, v) {
@@ -40,7 +58,7 @@ export class BallPhysics {
     return false;
   }
 
-  update(dt, players, onGoal) {
+  update(dt, players, onGoal, controlledPlayerId = -1) {
     const p = this.mesh.position;
     const v = this.v;
     this.cooldown = Math.max(0, this.cooldown - dt);
@@ -74,6 +92,23 @@ export class BallPhysics {
     }
 
     this.collideWithFrame(p, v);
+
+    // Domínio orientado: o jogador escolhido para receber o passe amortece
+    // a bola ao chegar, em vez de sofrer uma colisão que a lança para a frente.
+    const receiver = this.targetPlayerId >= 0
+      ? players.find(player => player.id === this.targetPlayerId)
+      : null;
+    if (receiver) {
+      const d = Math.hypot(p.x - receiver.mesh.position.x, p.z - receiver.mesh.position.z);
+      if (d < 1.9 && p.y < 2.8) this.trapAtPlayer(receiver);
+    } else {
+      // Também permite dominar uma bola mansa que chega ao jogador controlado.
+      const controlled = players.find(player => player.id === controlledPlayerId);
+      if (controlled) {
+        const d = Math.hypot(p.x - controlled.mesh.position.x, p.z - controlled.mesh.position.z);
+        if (d < 1.42 && p.y < 1.65 && Math.hypot(v.x, v.z) < 13) this.trapAtPlayer(controlled);
+      }
+    }
 
     const insideMouth = Math.abs(p.z) < 6.55 && p.y < 5.05;
     if (Math.abs(p.x) > 50 && insideMouth && this.cooldown <= 0) {
@@ -115,6 +150,8 @@ export class BallPhysics {
   reset(x = 0, z = 0) {
     this.mesh.position.set(x, this.radius, z);
     this.v = { x: 0, y: 0, z: 0 };
+    this.targetPlayerId = -1;
+    this.lastTouch = -1;
   }
 
   get speed() {
