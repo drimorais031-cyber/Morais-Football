@@ -50,7 +50,7 @@ function makePlayer(team,index,x,z){
 }
 function buildPitch(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0x9fc4d5);scene.fog=new THREE.Fog(0x9fc4d5,55,105);
- camera=new THREE.PerspectiveCamera(48,1,.1,180);camera.position.set(0,32,22);camera.lookAt(0,0,0);
+ camera=new THREE.PerspectiveCamera(48,1,.1,180);camera.position.set(0,25,16);camera.lookAt(0,.8,0);
  renderer=new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;viewport.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight(0xe8f4ff,0x31502b,2.0));
  const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-12,28,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
@@ -544,9 +544,9 @@ function loop(t){
  // Câmera acompanha a jogada para manter a ação no centro da tela.
  if(active&&ball){
   const tx=active.x*.42+ball.position.x*.58,tz=active.z*.42+ball.position.z*.58;
-  const desired=new THREE.Vector3(tx,32,tz+22);
-  camera.position.lerp(desired,Math.min(1,dt*1.8));
-  camera.lookAt(tx,0,tz);
+  const desired=new THREE.Vector3(tx,25,tz+16);
+  camera.position.lerp(desired,Math.min(1,dt*2.25));
+  camera.lookAt(tx,.8,tz);
  }
  if(scene.userData.stadiumFlags){const wind=performance.now()*.001;scene.userData.stadiumFlags.forEach(f=>{f.cloth.rotation.y=Math.sin(wind*2.1+f.phase)*.16;f.cloth.rotation.z=Math.sin(wind*1.6+f.phase)*.07})}
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
