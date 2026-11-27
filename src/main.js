@@ -80,12 +80,14 @@ function chooseReceiver(player,longPass,aim){
   })[0];
 }
 function pass(player,longPass,aim){
+  player.action="pass";player.actionTime=0;
   const receiver=chooseReceiver(player,longPass,aim);if(!receiver)return;
   const dx=receiver.mesh.position.x-player.mesh.position.x,dz=receiver.mesh.position.z-player.mesh.position.z,len=Math.hypot(dx,dz)||1;
   const direction={x:dx/len,z:dz/len},power=longPass?THREE.MathUtils.clamp(12+len*.22,14,23):THREE.MathUtils.clamp(7.5+len*.22,8.5,15);
   ball.reset(player.mesh.position.x+direction.x*1.8,player.mesh.position.z+direction.z*1.8);ball.kick(direction,power,longPass?3.2:.35,player.id);ballReleaseTimer=longPass?0.9:0.7;select(receiver);say(longPass?"LANÇAMENTO!":"PASSE!");
 }
 function shoot(player,power,aim){
+  player.action="shoot";player.actionTime=0;
   const goal={x:50-player.mesh.position.x,z:-player.mesh.position.z},aimLen=Math.hypot(aim.x,aim.z);
   if(aimLen>.2){goal.z+=(aim.z/aimLen)*8;goal.x+=(aim.x/aimLen)*2.5}
   const len=Math.hypot(goal.x,goal.z)||1,dir={x:goal.x/len,z:goal.z/len};
@@ -104,9 +106,22 @@ function movePlayer(player,dt,input,controlled){
   const speed=Math.hypot(player.velocity.x,player.velocity.z);
   if(speed>.25)player.mesh.rotation.y=Math.atan2(player.velocity.x,player.velocity.z);
   if(!controlled){player.velocity.x*=Math.exp(-1.5*dt);player.velocity.z*=Math.exp(-1.5*dt)}
-  // Animação de corrida
+  // Animação articulada de corrida, braços e pernas.
   player.phase+=speed*dt*1.8;
-  player.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(player.phase+(i*Math.PI))*Math.min(.62,speed*.075)});
+  player.actionTime=Math.min(1.2,(player.actionTime||0)+dt);
+  const moving=speed>.25, swing=moving?Math.sin(player.phase)*Math.min(.62,speed*.075):0;
+  player.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(player.phase+(i*Math.PI))*Math.min(.72,speed*.085)});
+  player.arms?.forEach((arm,i)=>{arm.rotation.x=moving?Math.sin(player.phase+(i===0?0:Math.PI))*.42:0;});
+  if(player.action==="pass"||player.action==="shoot"){
+    const t=Math.min(1,player.actionTime/.62),kick=Math.sin(t*Math.PI);
+    if(player.legs[1])player.legs[1].rotation.x-=kick*(player.action==="shoot" ? .95 : .48);
+    if(player.arms?.[0])player.arms[0].rotation.x-=kick*.5;
+    if(t>=1)player.action="idle";
+  } else if(player.action==="celebrate"){
+    const t=Math.min(1,player.actionTime/1.0),raise=Math.sin(t*Math.PI);
+    player.arms?.forEach((a,i)=>{a.rotation.z=(i===0?1:-1)*raise*1.35;});
+    if(t>=1)player.action="idle";
+  }
 }
 function controlBall(player,input,dt){
   let fx=input.x,fz=input.z,len=Math.hypot(fx,fz);
