@@ -292,8 +292,8 @@ export function createScene(){
     },
     resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)},
     follow(p,dt){
-      const target=new THREE.Vector3(p.x*.28,45.5,18+p.z*.48);
-      camera.position.lerp(target,1-Math.exp(-1.8*dt));camera.lookAt(p.x*.32,0,p.z*.32);
+      const target=new THREE.Vector3(p.x*.28,34,12+p.z*.48);
+      camera.position.lerp(target,1-Math.exp(-2.15*dt));camera.lookAt(p.x*.32,0,p.z*.32);
     },
     render(){renderer.render(scene,camera)}
   };
