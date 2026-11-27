@@ -113,7 +113,8 @@ function movePlayer(player,dt,input,controlled){
   if(player.mixer&&player.modelActions){
     const key=player.action==="pass"?"pass":player.action==="shoot"?"shoot":player.action==="celebrate"?"celebrate":moving?"run":"idle";
     const next=player.modelActions[key]||player.modelActions.idle;
-    if(next&&next!==player.currentModelAction){
+    if(next&&(next!==player.currentModelAction||player.forceModelAction)){
+      player.forceModelAction=false;
       next.reset();
       if(key==="celebrate"){
         next.setLoop(THREE.LoopOnce,1);
@@ -188,7 +189,7 @@ function loop(){
     match.goal(team);
     ball.reset();
     resetKickoff();
-    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;});
+    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;p.forceModelAction=true;});
     say("GOL! COMEMORAÇÃO!");
   });
   $("#power").style.width=charge+"%";
