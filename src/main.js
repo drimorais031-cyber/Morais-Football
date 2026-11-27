@@ -106,21 +106,33 @@ function movePlayer(player,dt,input,controlled){
   const speed=Math.hypot(player.velocity.x,player.velocity.z);
   if(speed>.25)player.mesh.rotation.y=Math.atan2(player.velocity.x,player.velocity.z);
   if(!controlled){player.velocity.x*=Math.exp(-1.5*dt);player.velocity.z*=Math.exp(-1.5*dt)}
-  // Animação articulada de corrida, braços e pernas.
+  // Prioriza os clipes do GLB; mantém animação procedural como fallback.
   player.phase+=speed*dt*1.8;
   player.actionTime=Math.min(1.2,(player.actionTime||0)+dt);
-  const moving=speed>.25, swing=moving?Math.sin(player.phase)*Math.min(.62,speed*.075):0;
-  player.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(player.phase+(i*Math.PI))*Math.min(.72,speed*.085)});
-  player.arms?.forEach((arm,i)=>{arm.rotation.x=moving?Math.sin(player.phase+(i===0?0:Math.PI))*.42:0;});
-  if(player.action==="pass"||player.action==="shoot"){
-    const t=Math.min(1,player.actionTime/.62),kick=Math.sin(t*Math.PI);
-    if(player.legs[1])player.legs[1].rotation.x-=kick*(player.action==="shoot" ? .95 : .48);
-    if(player.arms?.[0])player.arms[0].rotation.x-=kick*.5;
-    if(t>=1)player.action="idle";
-  } else if(player.action==="celebrate"){
-    const t=Math.min(1,player.actionTime/1.0),raise=Math.sin(t*Math.PI);
-    player.arms?.forEach((a,i)=>{a.rotation.z=(i===0?1:-1)*raise*1.35;});
-    if(t>=1)player.action="idle";
+  const moving=speed>.25;
+  if(player.mixer&&player.modelActions){
+    const key=player.action==="pass"?"pass":player.action==="shoot"?"shoot":player.action==="celebrate"?"celebrate":moving?"run":"idle";
+    const next=player.modelActions[key]||player.modelActions.idle;
+    if(next&&next!==player.currentModelAction){
+      next.reset().fadeIn(.12).play();
+      player.currentModelAction?.fadeOut(.12);
+      player.currentModelAction=next;
+    }
+    player.mixer.update(dt);
+    if((player.action==="pass"||player.action==="shoot"||player.action==="celebrate")&&player.actionTime>(player.action==="celebrate"?1.0:.62))player.action="idle";
+  } else {
+    player.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(player.phase+(i*Math.PI))*Math.min(.72,speed*.085)});
+    player.arms?.forEach((arm,i)=>{arm.rotation.x=moving?Math.sin(player.phase+(i===0?0:Math.PI))*.42:0;});
+    if(player.action==="pass"||player.action==="shoot"){
+      const t=Math.min(1,player.actionTime/.62),kick=Math.sin(t*Math.PI);
+      if(player.legs[1])player.legs[1].rotation.x-=kick*(player.action==="shoot" ? .95 : .48);
+      if(player.arms?.[0])player.arms[0].rotation.x-=kick*.5;
+      if(t>=1)player.action="idle";
+    } else if(player.action==="celebrate"){
+      const t=Math.min(1,player.actionTime/1.0),raise=Math.sin(t*Math.PI);
+      player.arms?.forEach((a,i)=>{a.rotation.z=(i===0?1:-1)*raise*1.35;});
+      if(t>=1)player.action="idle";
+    }
   }
 }
 function controlBall(player,input,dt){
@@ -165,7 +177,9 @@ function loop(){
     charge=0;shotPlayer=null;
   }
   ball.update(dt,world.players,team=>{
-    match.goal(team);ball.reset();
+    match.goal(team);
+    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;});
+    ball.reset();
     resetKickoff();
   });
   $("#power").style.width=charge+"%";
