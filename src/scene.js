@@ -230,12 +230,31 @@ function makePlayer(id,team,role,x,z,players,scene){
     model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
     group.add(model);visual.visible=false;
     const mixer=new THREE.AnimationMixer(model),actions={};
+    if(p.teamKit)applyModelKit(model,p.teamKit);
     for(const clip of gltf.animations){const action=mixer.clipAction(clip);actions[clip.name.toLowerCase()]=action;}
     const idle=actions.idle||Object.values(actions)[0];
     if(idle){idle.play();p.currentModelAction=idle;}
     p.modelRoot=model;p.mixer=mixer;p.modelActions=actions;
   },undefined,()=>{ /* Mantém o jogador procedural se o GLB ainda não estiver no repositório. */ });
 
+}
+function applyModelKit(model,kit){
+  const shirt=kit.shirt,shorts=kit.shorts;
+  const shirtTrim=shorts;
+  const lightTrim=0xf4f2e9;
+  model.traverse(o=>{
+    if(!o.isMesh)return;
+    const n=(o.name||"").toLowerCase();
+    if(!o.material)return;
+    o.material=Array.isArray(o.material)?o.material.map(m=>m.clone()):o.material.clone();
+    const materials=Array.isArray(o.material)?o.material:[o.material];
+    let color=null;
+    if(n.includes("jersey")||n.includes("sleeve")||n.includes("upper arm"))color=shirt;
+    else if(n.includes("waist short")||n.includes("thigh"))color=shorts;
+    else if(n.includes("red chest stripe"))color=shirtTrim;
+    else if(n.includes("black chest stripe"))color=lightTrim;
+    if(color!==null)materials.forEach(m=>{if(m.color)m.color.setHex(color);});
+  });
 }
 export function createScene(){
   const scene=new THREE.Scene();scene.background=new THREE.Color(0x7899b4);scene.fog=new THREE.Fog(0x7899b4,145,230);
@@ -261,7 +280,14 @@ export function createScene(){
   [[28,-15],[28,0],[28,15],[12,-8],[12,8]].forEach((p,i)=>makePlayer(i+5,1,i===0?"GK":"FIELD",...p,players,scene));
   return{
     scene,camera,renderer,ball,players,
-    setTeamColors(home,away){for(const p of players){const t=p.team===0?home:away;p.kit.color.setHex(t.shirt);p.shorts.color.setHex(t.shorts);}},
+    setTeamColors(home,away){
+      for(const p of players){
+        const t=p.team===0?home:away;
+        p.teamKit=t;
+        p.kit.color.setHex(t.shirt);p.shorts.color.setHex(t.shorts);
+        if(p.modelRoot)applyModelKit(p.modelRoot,t);
+      }
+    },
     resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)},
     follow(p,dt){
       const target=new THREE.Vector3(p.x*.28,45.5,18+p.z*.48);
