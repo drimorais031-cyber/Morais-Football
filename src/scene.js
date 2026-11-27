@@ -220,8 +220,10 @@ function makePlayer(id,team,role,x,z,players,scene){
   group.add(visual);
   group.position.set(x,0,z);scene.add(group);
   const ring=new THREE.Mesh(new THREE.RingGeometry(.78,.96,36),new THREE.MeshBasicMaterial({color:0xffe45b,side:THREE.DoubleSide,transparent:true,opacity:.9}));
-  ring.rotation.x=-Math.PI/2;ring.position.y=.065;ring.visible=false;visual.add(ring);
-  const p={id,team,role,mesh:group,visual,ring,legs,arms,kit:shirt,shorts,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7,action:"idle",actionTime:0};
+  ring.rotation.x=-Math.PI/2;ring.position.y=.065;ring.visible=false;group.add(ring);
+  const celebrationRing=new THREE.Mesh(new THREE.RingGeometry(1.05,1.28,48),new THREE.MeshBasicMaterial({color:0xffd43b,side:THREE.DoubleSide,transparent:true,opacity:.95}));
+  celebrationRing.rotation.x=-Math.PI/2;celebrationRing.position.y=.075;celebrationRing.visible=false;group.add(celebrationRing);
+  const p={id,team,role,mesh:group,visual,ring,celebrationRing,celebrating:false,legs,arms,kit:shirt,shorts,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7,action:"idle",actionTime:0};
   players.push(p);
   playerLoader.load(playerModelUrl,gltf=>{
     const model=gltf.scene.clone(true);
