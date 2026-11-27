@@ -352,3 +352,128 @@ button{border:0;border-radius:9px;font-weight:900;letter-spacing:.7px;cursor:poi
 
 /* Android WebView: mantém o multitoque ativo sem gestos do navegador. */
 .mobile-controls,.left-controls,.actions,.actions button,.joystick{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+
+
+/* MORAIS FOOTBALL · acabamento premium do menu principal */
+.menu{
+ background:
+  radial-gradient(ellipse at 72% 45%,rgba(32,112,210,.58),transparent 42%),
+  radial-gradient(ellipse at 8% 95%,rgba(33,184,126,.16),transparent 36%),
+  linear-gradient(118deg,#050d1c 0%,#091b38 48%,#07122b 100%)!important;
+}
+.menu:before{
+ background:
+  linear-gradient(90deg,rgba(4,12,27,.16),rgba(4,12,27,.02) 60%,rgba(4,12,27,.25)),
+  repeating-linear-gradient(135deg,transparent 0 86px,rgba(255,255,255,.025) 87px 89px),
+  radial-gradient(ellipse at 72% 50%,rgba(57,139,235,.12),transparent 55%)!important;
+}
+.menu-yellow-ribbon{opacity:.28;filter:blur(1px)}
+.brand-mark{
+ background:linear-gradient(145deg,#173d72,#07172f)!important;
+ border:1px solid rgba(190,224,255,.8)!important;
+ border-radius:12px!important;transform:none!important;
+ box-shadow:0 0 24px rgba(65,153,255,.24),inset 0 1px 0 #ffffff55;
+}
+.brand strong{letter-spacing:2px}
+.brand strong span{color:#b9f35b!important}
+.brand small{color:#9bb7d7!important}
+.top-status{padding:7px 11px;border:1px solid rgba(164,203,255,.22);border-radius:30px;background:rgba(4,14,31,.42);backdrop-filter:blur(8px)}
+.top-status i{background:#a9ed55!important;box-shadow:0 0 12px #a9ed55!important}
+.top-status b{border-color:#7aa8d8!important;background:#ffffff0b}
+.menu-player-art{
+ border-radius:22px;
+ background:
+  radial-gradient(ellipse at 50% 24%,rgba(92,168,255,.24),transparent 42%),
+  linear-gradient(180deg,rgba(16,54,98,.18),rgba(3,12,28,.72));
+ border:1px solid rgba(157,202,255,.13);
+ box-shadow:inset 0 0 55px rgba(42,128,219,.12),0 22px 55px rgba(0,0,0,.22);
+}
+.menu-player-art:before{
+ content:"";position:absolute;inset:0;pointer-events:none;opacity:.7;
+ background:
+  linear-gradient(180deg,transparent 48%,rgba(89,168,255,.14) 49%,transparent 50%),
+  repeating-linear-gradient(90deg,transparent 0 13%,rgba(205,232,255,.055) 13.2% 13.5%,transparent 13.7% 26%),
+  radial-gradient(ellipse at 50% 100%,rgba(82,157,255,.2),transparent 48%);
+}
+.menu-player-art:after{
+ content:"";position:absolute;left:50%;bottom:12%;width:clamp(74px,11vw,128px);aspect-ratio:1;
+ transform:translateX(-50%);border-radius:50%;
+ background:
+  radial-gradient(circle at 34% 27%,#ffffff 0 5%,transparent 6%),
+  conic-gradient(from 18deg,#f7fbff 0 12%,#152238 12% 19%,#f7fbff 19% 35%,#152238 35% 43%,#f7fbff 43% 60%,#152238 60% 68%,#f7fbff 68% 84%,#152238 84% 91%,#f7fbff 91%);
+ border:5px solid rgba(255,255,255,.85);
+ box-shadow:0 18px 36px #0009,0 0 34px rgba(91,169,255,.28);
+ opacity:.92;
+}
+.hero-player{filter:drop-shadow(0 18px 22px #020714aa)!important}
+.player-name{
+ bottom:4%!important;padding:8px 14px;border:1px solid #ffffff33;border-radius:30px;
+ background:rgba(4,13,27,.65);backdrop-filter:blur(8px);letter-spacing:2px;
+}
+.menu-title span,.mode-title{color:#b9f35b!important}
+.menu-title h1{letter-spacing:-2.5px;text-shadow:0 8px 30px #0008}
+.menu-title h1 em{color:#b9f35b!important}
+.menu-title p{color:#c2d3e8!important}
+.menu-tabs{background:rgba(2,12,29,.65)!important;border:1px solid #ffffff18;backdrop-filter:blur(8px)}
+.menu-tabs button{color:#a9bfda!important;transition:background .18s,color .18s,transform .18s}
+.menu-tabs button.active{background:#b9f35b!important;color:#0a1a2b!important}
+.feature-banner{
+ min-height:clamp(82px,15vh,140px)!important;
+ background:linear-gradient(108deg,#123d6d 0%,#176bb0 52%,#173d79 100%)!important;
+ border:1px solid rgba(193,224,255,.25);
+ box-shadow:0 14px 34px #0005,inset 0 1px 0 #ffffff22!important;
+}
+.feature-banner:before{background:linear-gradient(110deg,#ffffff10,transparent 55%,#b9f35b20)!important}
+.feature-banner small{color:#c9e5ff!important}
+.feature-banner h2{letter-spacing:-1.4px;text-shadow:0 5px 18px #001b3d88}
+.feature-banner p{color:#e0edfa!important}
+.banner-ball{filter:drop-shadow(0 12px 12px #001b3d99)!important}
+.mode-card{
+ background:linear-gradient(155deg,#f4f8ff,#c9d9ed)!important;
+ border:1px solid #ffffff77!important;
+ box-shadow:0 8px 22px #0004!important;
+ transition:transform .16s,filter .16s,box-shadow .16s;
+}
+.mode-card:active{transform:translateY(2px) scale(.98)}
+.mode-card.selected{
+ background:linear-gradient(145deg,#d8ff8c,#9fdf49)!important;
+ outline:2px solid #eaffc8!important;
+ box-shadow:0 0 0 4px #a9ed5522,0 9px 24px #0005!important;
+}
+.mode-card small{color:#526b80!important}
+.match-panel{
+ background:linear-gradient(145deg,rgba(7,24,49,.96),rgba(10,39,76,.94))!important;
+ border:1px solid rgba(148,195,244,.34)!important;
+ box-shadow:0 16px 34px #0005,inset 0 1px 0 #ffffff12!important;
+ backdrop-filter:blur(12px);
+}
+.match-heading{border-color:#ffffff24!important}
+.match-heading span{color:#b9f35b!important}
+.match-heading small,.team-caption{color:#a9c3df!important}
+.team-card{background:rgba(24,57,96,.72)!important;border-color:#ffffff25!important}
+.team-emblem{background:linear-gradient(145deg,#d8ff8c,#8ecb3f)!important;color:#10233b!important;clip-path:none!important;border-radius:9px;box-shadow:0 5px 14px #0004}
+.team-emblem.rival{background:linear-gradient(145deg,#d8eaff,#6b9bd2)!important}
+.team-card select{border-color:#ffffff24!important}
+.primary{
+ background:linear-gradient(100deg,#d8ff8c,#9fdf49)!important;
+ color:#10233b!important;border-radius:12px!important;
+ box-shadow:0 8px 24px #9fdf4933,inset 0 1px 0 #ffffffaa!important;
+ transition:transform .16s,filter .16s;
+}
+.primary:active{transform:scale(.985);filter:brightness(1.08)}
+.menu-bottom{color:#9db5d1!important}
+.menu-bottom b{color:#b9f35b!important}
+#menuInfoPanel button{background:#b9f35b!important;color:#10233b!important;border-radius:10px}
+@media (hover:hover){
+ .mode-card:hover{transform:translateY(-3px);box-shadow:0 14px 28px #0005!important}
+ .primary:hover{filter:brightness(1.06)}
+}
+@media (prefers-reduced-motion:no-preference){
+ .player-glow{animation:mfGlow 4s ease-in-out infinite alternate}
+ .banner-ball{animation:mfBallFloat 4.5s ease-in-out infinite}
+ @keyframes mfGlow{from{opacity:.65;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
+ @keyframes mfBallFloat{0%,100%{translate:0 0;rotate:-18deg}50%{translate:0 -7px;rotate:-10deg}}
+}
+@media (prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
