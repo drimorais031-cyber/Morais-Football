@@ -1,6 +1,9 @@
 import * as THREE from "three";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
 import { FIELD } from "./physics.js";
 
+const playerLoader=new GLTFLoader();
+const playerModelUrl=new URL("../assets/morais-player.glb",import.meta.url).href;
 const mat=(color,roughness=.82)=>new THREE.MeshStandardMaterial({color,roughness});
 const addBox=(parent,w,h,d,color,x,y,z,roughness=.8)=>{
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color,roughness));
@@ -190,35 +193,49 @@ function createStadiumDetails(scene){
 }
 
 function makePlayer(id,team,role,x,z,players,scene){
-  const group=new THREE.Group();
+  const group=new THREE.Group(),visual=new THREE.Group();
   const homeColor=team===0?0xe5c83e:0xf2f2ed;
   const shortsColor=team===0?0x183326:0x243b70;
   const shirt=mat(homeColor,.62),shorts=mat(shortsColor),skin=mat(0xb9815e),socks=mat(team===0?0xe9e1bf:0xf4f4f0),boots=mat(0x171b1d,.55);
   // Tronco, gola e cabeça
-  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.72,5,10),shirt);torso.position.y=1.62;torso.castShadow=true;group.add(torso);
-  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.13,.15,.2,10),skin);neck.position.y=2.22;group.add(neck);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.31,16,12),skin);head.position.y=2.55;head.castShadow=true;group.add(head);
-  const hair=new THREE.Mesh(new THREE.SphereGeometry(.315,14,8,0,Math.PI*2,0,Math.PI*.48),mat(team===0?0x30251e:0x211d1a));hair.position.y=2.65;group.add(hair);
-  const pants=new THREE.Mesh(new THREE.BoxGeometry(.78,.42,.5),shorts);pants.position.y=1.04;group.add(pants);
+  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,.72,5,10),shirt);torso.position.y=1.62;torso.castShadow=true;visual.add(torso);
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.13,.15,.2,10),skin);neck.position.y=2.22;visual.add(neck);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.31,16,12),skin);head.position.y=2.55;head.castShadow=true;visual.add(head);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.315,14,8,0,Math.PI*2,0,Math.PI*.48),mat(team===0?0x30251e:0x211d1a));hair.position.y=2.65;visual.add(hair);
+  const pants=new THREE.Mesh(new THREE.BoxGeometry(.78,.42,.5),shorts);pants.position.y=1.04;visual.add(pants);
   const legs=[],arms=[];
   for(const side of [-1,1]){
     const pivot=new THREE.Group();pivot.position.set(side*.23,.91,0);
     const upper=new THREE.Mesh(new THREE.CylinderGeometry(.16,.14,.42,10),skin);upper.position.y=-.2;pivot.add(upper);
     const sock=new THREE.Mesh(new THREE.CylinderGeometry(.115,.12,.34,10),socks);sock.position.y=-.56;pivot.add(sock);
     const boot=new THREE.Mesh(new THREE.BoxGeometry(.22,.14,.38),boots);boot.position.set(0,-.75,.12);pivot.add(boot);
-    group.add(pivot);legs.push(pivot);
+    visual.add(pivot);legs.push(pivot);
     const armPivot=new THREE.Group();armPivot.position.set(side*.49,1.95,0);
     const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.48,4,8),shirt);arm.rotation.z=side*-.12;arm.position.set(side*.02,-.31,0);armPivot.add(arm);
-    const hand=new THREE.Mesh(new THREE.SphereGeometry(.105,8,8),skin);hand.position.set(side*.04,-.62,0);armPivot.add(hand);group.add(armPivot);arms.push(armPivot);
+    const hand=new THREE.Mesh(new THREE.SphereGeometry(.105,8,8),skin);hand.position.set(side*.04,-.62,0);armPivot.add(hand);visual.add(armPivot);arms.push(armPivot);
   }
   // Número na frente
   const number=new THREE.Mesh(new THREE.PlaneGeometry(.25,.3),new THREE.MeshBasicMaterial({color:team===0?0x152719:0x273d6e}));
-  number.position.set(0,1.7,.493);group.add(number);
+  number.position.set(0,1.7,.493);visual.add(number);
+  group.add(visual);
   group.position.set(x,0,z);scene.add(group);
   const ring=new THREE.Mesh(new THREE.RingGeometry(.78,.96,36),new THREE.MeshBasicMaterial({color:0xffe45b,side:THREE.DoubleSide,transparent:true,opacity:.9}));
-  ring.rotation.x=-Math.PI/2;ring.position.y=.065;ring.visible=false;group.add(ring);
-  const p={id,team,role,mesh:group,ring,legs,arms,kit:shirt,shorts,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7,action:"idle",actionTime:0};
+  ring.rotation.x=-Math.PI/2;ring.position.y=.065;ring.visible=false;visual.add(ring);
+  const p={id,team,role,mesh:group,visual,ring,legs,arms,kit:shirt,shorts,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7,action:"idle",actionTime:0};
   players.push(p);
+  playerLoader.load(playerModelUrl,gltf=>{
+    const model=gltf.scene.clone(true);
+    model.position.set(0,0,0);
+    model.scale.setScalar(1);
+    model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+    group.add(model);visual.visible=false;
+    const mixer=new THREE.AnimationMixer(model),actions={};
+    for(const clip of gltf.animations){const action=mixer.clipAction(clip);actions[clip.name.toLowerCase()]=action;}
+    const idle=actions.idle||Object.values(actions)[0];
+    if(idle){idle.play();p.currentModelAction=idle;}
+    p.modelRoot=model;p.mixer=mixer;p.modelActions=actions;
+  },undefined,()=>{ /* Mantém o jogador procedural se o GLB ainda não estiver no repositório. */ });
+
 }
 export function createScene(){
   const scene=new THREE.Scene();scene.background=new THREE.Color(0x7899b4);scene.fog=new THREE.Fog(0x7899b4,145,230);
