@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-stable-goal-celebration-20261127e";
-import { BallPhysics } from "./physics.js?v=mf-stable-goal-celebration-20261127e";
-import { Controls } from "./controls.js?v=mf-stable-goal-celebration-20261127e";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-stable-goal-celebration-20261127e";
-import { Match } from "./match.js?v=mf-stable-goal-celebration-20261127e";
+import { createScene } from "./scene.js?v=morais-ball-control-20261127";
+import { BallPhysics } from "./physics.js?v=morais-ball-control-20261127";
+import { Controls } from "./controls.js?v=morais-ball-control-20261127";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=morais-ball-control-20261127";
+import { Match } from "./match.js?v=morais-ball-control-20261127";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
@@ -84,7 +84,7 @@ function pass(player,longPass,aim){
   const receiver=chooseReceiver(player,longPass,aim);if(!receiver)return;
   const dx=receiver.mesh.position.x-player.mesh.position.x,dz=receiver.mesh.position.z-player.mesh.position.z,len=Math.hypot(dx,dz)||1;
   const direction={x:dx/len,z:dz/len},power=longPass?THREE.MathUtils.clamp(12+len*.22,14,23):THREE.MathUtils.clamp(7.5+len*.22,8.5,15);
-  ball.reset(player.mesh.position.x+direction.x*1.8,player.mesh.position.z+direction.z*1.8);ball.kick(direction,power,longPass?3.2:.35,player.id);ballReleaseTimer=longPass?0.9:0.7;select(receiver);say(longPass?"LANÇAMENTO!":"PASSE!");
+  ball.reset(player.mesh.position.x+direction.x*1.8,player.mesh.position.z+direction.z*1.8);ball.kick(direction,power,longPass?3.2:.35,player.id,receiver.id);ballReleaseTimer=longPass?0.9:0.7;select(receiver);say(longPass?"LANÇAMENTO!":"PASSE!");
 }
 function shoot(player,power,aim){
   player.action="shoot";player.actionTime=0;
@@ -206,7 +206,7 @@ function loop(){
     resetKickoff();
     world.players.filter(p=>p.team===team).forEach(p=>{p.action="idle";p.actionTime=0;p.forceModelAction=false;p.velocity.x=0;p.velocity.z=0;p.celebrating=true;});
     say("GOL! COMEMORAÇÃO!");
-  });
+  },active);
   $("#power").style.width=charge+"%";
   $("#powerValue").textContent=Math.round(charge)+"%";
   $("#stamina").style.width=controlled.stamina+"%";
