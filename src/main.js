@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-glb-20261127a";
-import { BallPhysics } from "./physics.js?v=mf-glb-20261127a";
-import { Controls } from "./controls.js?v=mf-glb-20261127a";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-glb-20261127a";
-import { Match } from "./match.js?v=mf-glb-20261127a";
+import { createScene } from "./scene.js?v=mf-fix-uniform-celebration-20261127c";
+import { BallPhysics } from "./physics.js?v=mf-fix-uniform-celebration-20261127c";
+import { Controls } from "./controls.js?v=mf-fix-uniform-celebration-20261127c";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-fix-uniform-celebration-20261127c";
+import { Match } from "./match.js?v=mf-fix-uniform-celebration-20261127c";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
@@ -108,13 +108,21 @@ function movePlayer(player,dt,input,controlled){
   if(!controlled){player.velocity.x*=Math.exp(-1.5*dt);player.velocity.z*=Math.exp(-1.5*dt)}
   // Prioriza os clipes do GLB; mantém animação procedural como fallback.
   player.phase+=speed*dt*1.8;
-  player.actionTime=Math.min(1.2,(player.actionTime||0)+dt);
+  player.actionTime=(player.actionTime||0)+dt;
   const moving=speed>.25;
   if(player.mixer&&player.modelActions){
     const key=player.action==="pass"?"pass":player.action==="shoot"?"shoot":player.action==="celebrate"?"celebrate":moving?"run":"idle";
     const next=player.modelActions[key]||player.modelActions.idle;
     if(next&&next!==player.currentModelAction){
-      next.reset().fadeIn(.12).play();
+      next.reset();
+      if(key==="celebrate"){
+        next.setLoop(THREE.LoopOnce,1);
+        next.clampWhenFinished=true;
+      } else {
+        next.setLoop(THREE.LoopRepeat,Infinity);
+        next.clampWhenFinished=false;
+      }
+      next.fadeIn(.12).play();
       player.currentModelAction?.fadeOut(.12);
       player.currentModelAction=next;
     }
