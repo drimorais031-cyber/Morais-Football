@@ -250,7 +250,7 @@ function applyModelKit(model,kit){
     const materials=Array.isArray(o.material)?o.material:[o.material];
     let color=null;
     if(n.includes("jersey")||n.includes("sleeve")||n.includes("upper arm"))color=shirt;
-    else if(n.includes("waist short")||n.includes("thigh"))color=shorts;
+    else if(n.includes("waist short"))color=shorts;
     else if(n.includes("red chest stripe"))color=shirtTrim;
     else if(n.includes("black chest stripe"))color=lightTrim;
     if(color!==null)materials.forEach(m=>{if(m.color)m.color.setHex(color);});
