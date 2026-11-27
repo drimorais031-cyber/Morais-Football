@@ -111,3 +111,96 @@
 #intro #introSkip{z-index:6}
 #intro3d{display:none!important}
 
+
+
+/* MORAIS FOOTBALL | menu principal premium */
+#start{
+ background:
+  radial-gradient(ellipse at 78% 30%,rgba(39,112,190,.34),transparent 44%),
+  radial-gradient(ellipse at 18% 92%,rgba(145,210,72,.13),transparent 40%),
+  linear-gradient(135deg,#030b19 0%,#0a1d38 52%,#071226 100%)!important;
+}
+#start:before{
+ content:"";position:absolute;inset:0;pointer-events:none;opacity:.45;
+ background:repeating-linear-gradient(135deg,transparent 0 88px,rgba(205,229,255,.035) 89px 91px);
+}
+#start>.start-panel{
+ position:relative;isolation:isolate;width:min(610px,94vw)!important;
+ padding:clamp(18px,3.8vh,34px)!important;
+ overflow:hidden;text-align:center;
+ background:linear-gradient(145deg,rgba(12,35,65,.97),rgba(4,15,32,.98))!important;
+ border:1px solid rgba(158,204,255,.28)!important;border-radius:22px!important;
+ box-shadow:0 26px 75px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)!important;
+ backdrop-filter:blur(16px);
+}
+#start>.start-panel:before{
+ content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;
+ background:radial-gradient(ellipse at 50% 0%,rgba(70,147,226,.23),transparent 58%);
+}
+#start .brand{
+ width:66px;height:66px;margin:0 auto 13px!important;
+ border:2px solid #c5f17a!important;border-radius:17px!important;
+ background:#07182d!important;box-shadow:0 0 30px rgba(157,222,89,.18)!important;
+}
+#start .brand img{object-fit:cover;border-radius:14px}
+#start .start-panel>p:first-of-type{
+ color:#a9c5e4!important;font-weight:800;letter-spacing:4px!important;
+ font-size:10px!important;margin:8px 0 10px!important;
+}
+#start h1{
+ color:#f4f8ff!important;font-size:clamp(30px,6vw,48px)!important;
+ font-style:italic;letter-spacing:-1.8px;margin:8px 0 10px!important;
+ text-shadow:0 8px 28px #0009;
+}
+#start h1 em{color:#c5f17a!important}
+#start .start-panel>small{
+ display:block;color:#9fb8d6!important;font-size:10px;
+ letter-spacing:2.2px!important;margin:0 0 15px;
+}
+#start .team-picks{gap:10px 13px!important;margin-top:17px!important}
+#start .team-picks label{
+ color:#c5d7ec!important;font-size:10px!important;letter-spacing:1.3px;
+}
+#start .team-picks select{
+ min-height:45px;padding:11px!important;
+ border:1px solid rgba(151,192,235,.32)!important;border-radius:9px!important;
+ background:linear-gradient(180deg,#142f50,#0b203b)!important;
+ color:#f4f8ff!important;outline:none;
+}
+#start .team-picks select:focus{border-color:#c5f17a!important;box-shadow:0 0 0 3px #c5f17a22}
+#start .team-preview{
+ min-height:62px!important;padding:9px!important;
+ background:rgba(120,170,220,.09)!important;
+ border:1px solid rgba(160,200,240,.16)!important;border-radius:10px!important;
+}
+#start .team-preview b{color:#f3f7fc!important;font-size:13px!important}
+#start .team-preview small{color:#a9bfd9!important;font-size:10px!important}
+#start .team-preview .crest{filter:drop-shadow(0 4px 5px #0008)}
+#play{
+ min-height:52px;margin:20px 0 10px!important;
+ border:1px solid #e5ffb5!important;border-radius:11px!important;
+ background:linear-gradient(100deg,#d9ff9c,#a8e85d)!important;
+ color:#10233a!important;font-size:14px!important;font-weight:1000!important;
+ letter-spacing:1.4px;box-shadow:0 9px 25px rgba(166,231,90,.2),inset 0 1px 0 #fff9!important;
+ transition:transform .16s,filter .16s;
+}
+#play:active{transform:scale(.985);filter:brightness(1.07)}
+#start .help{color:#8fa9c5!important;letter-spacing:.3px;margin-bottom:0!important}
+#hud{
+ background:linear-gradient(110deg,rgba(4,17,35,.94),rgba(13,39,69,.94))!important;
+ border:1px solid rgba(180,215,250,.28)!important;border-radius:12px!important;
+ box-shadow:0 8px 28px #0005!important;backdrop-filter:blur(12px);
+}
+#notice{padding:10px 18px;border:1px solid #ffffff24;border-radius:10px;background:#07182dcc;backdrop-filter:blur(8px)}
+@media(max-height:480px){
+ #start>.start-panel{padding:10px 18px!important;width:min(570px,94vw)!important}
+ #start .brand{width:40px;height:40px;margin-bottom:4px!important}
+ #start .start-panel>p:first-of-type{margin:3px 0!important}
+ #start h1{font-size:25px!important;margin:2px 0 5px!important}
+ #start .start-panel>small{margin-bottom:7px}
+ #start .team-picks{margin-top:6px!important;gap:5px 8px!important}
+ #start .team-preview{min-height:36px!important}
+ #start .team-preview .crest{width:30px;height:35px}
+ #play{min-height:38px;margin:7px 0 4px!important;padding:8px}
+}
+@media(hover:hover){#play:hover{filter:brightness(1.07);transform:translateY(-1px)}}
