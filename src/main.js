@@ -103,6 +103,21 @@ function movePlayer(player,dt,input,controlled){
     const response=1-Math.exp(-12*dt);player.velocity.x+=(input.x*speed-player.velocity.x)*response;player.velocity.z+=(input.z*speed-player.velocity.z)*response;
   }
   const p=player.mesh.position;p.x=THREE.MathUtils.clamp(p.x+player.velocity.x*dt,-48,48);p.z=THREE.MathUtils.clamp(p.z+player.velocity.z*dt,-30,30);
+  if(player.celebrating){
+    const t=player.actionTime||0;
+    p.y=Math.abs(Math.sin(t*10))*0.48;
+    player.mesh.rotation.y+=Math.sin(t*5)*dt*0.9;
+    if(player.celebrationRing){
+      player.celebrationRing.visible=true;
+      const pulse=1+Math.sin(t*12)*.12;
+      player.celebrationRing.scale.setScalar(pulse);
+      player.celebrationRing.material.opacity=.65+Math.sin(t*12)*.3;
+    }
+    if(t>=2.4){
+      player.celebrating=false;p.y=0;
+      if(player.celebrationRing)player.celebrationRing.visible=false;
+    }
+  } else {p.y=0;if(player.celebrationRing)player.celebrationRing.visible=false;}
   const speed=Math.hypot(player.velocity.x,player.velocity.z);
   if(speed>.25)player.mesh.rotation.y=Math.atan2(player.velocity.x,player.velocity.z);
   if(!controlled){player.velocity.x*=Math.exp(-1.5*dt);player.velocity.z*=Math.exp(-1.5*dt)}
@@ -189,7 +204,7 @@ function loop(){
     match.goal(team);
     ball.reset();
     resetKickoff();
-    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;p.forceModelAction=true;});
+    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;p.forceModelAction=true;p.celebrating=true;});
     say("GOL! COMEMORAÇÃO!");
   });
   $("#power").style.width=charge+"%";
