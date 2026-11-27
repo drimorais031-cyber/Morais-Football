@@ -200,7 +200,7 @@ function makePlayer(id,team,role,x,z,players,scene){
   const head=new THREE.Mesh(new THREE.SphereGeometry(.31,16,12),skin);head.position.y=2.55;head.castShadow=true;group.add(head);
   const hair=new THREE.Mesh(new THREE.SphereGeometry(.315,14,8,0,Math.PI*2,0,Math.PI*.48),mat(team===0?0x30251e:0x211d1a));hair.position.y=2.65;group.add(hair);
   const pants=new THREE.Mesh(new THREE.BoxGeometry(.78,.42,.5),shorts);pants.position.y=1.04;group.add(pants);
-  const legs=[];
+  const legs=[],arms=[];
   for(const side of [-1,1]){
     const pivot=new THREE.Group();pivot.position.set(side*.23,.91,0);
     const upper=new THREE.Mesh(new THREE.CylinderGeometry(.16,.14,.42,10),skin);upper.position.y=-.2;pivot.add(upper);
@@ -209,7 +209,7 @@ function makePlayer(id,team,role,x,z,players,scene){
     group.add(pivot);legs.push(pivot);
     const armPivot=new THREE.Group();armPivot.position.set(side*.49,1.95,0);
     const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.105,.48,4,8),shirt);arm.rotation.z=side*-.12;arm.position.set(side*.02,-.31,0);armPivot.add(arm);
-    const hand=new THREE.Mesh(new THREE.SphereGeometry(.105,8,8),skin);hand.position.set(side*.04,-.62,0);armPivot.add(hand);group.add(armPivot);
+    const hand=new THREE.Mesh(new THREE.SphereGeometry(.105,8,8),skin);hand.position.set(side*.04,-.62,0);armPivot.add(hand);group.add(armPivot);arms.push(armPivot);
   }
   // Número na frente
   const number=new THREE.Mesh(new THREE.PlaneGeometry(.25,.3),new THREE.MeshBasicMaterial({color:team===0?0x152719:0x273d6e}));
@@ -217,7 +217,7 @@ function makePlayer(id,team,role,x,z,players,scene){
   group.position.set(x,0,z);scene.add(group);
   const ring=new THREE.Mesh(new THREE.RingGeometry(.78,.96,36),new THREE.MeshBasicMaterial({color:0xffe45b,side:THREE.DoubleSide,transparent:true,opacity:.9}));
   ring.rotation.x=-Math.PI/2;ring.position.y=.065;ring.visible=false;group.add(ring);
-  const p={id,team,role,mesh:group,ring,legs,kit:shirt,shorts,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7};
+  const p={id,team,role,mesh:group,ring,legs,arms,kit:shirt,shorts,phase:Math.random()*Math.PI*2,home:{x,z},velocity:{x:0,z:0},stamina:100,radius:.7,action:"idle",actionTime:0};
   players.push(p);
 }
 export function createScene(){
