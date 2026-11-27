@@ -65,6 +65,7 @@ const home=world.players.filter(p=>p.team===0);
 let active=3,charge=0,lastSwitch=0,shotPlayer=null,ballReleaseTimer=0;
 const say=message=>{const n=$("#notice");n.textContent=message;clearTimeout(say.timer);say.timer=setTimeout(()=>n.textContent="",1400)};
 const match=new Match(score=>{$("#homeScore").textContent=score.home;$("#awayScore").textContent=score.away;$("#clock").textContent=match.format()},say);
+let displayedHalf=1;
 function select(player){if(!player)return;active=player.id;world.players.forEach(p=>p.ring.visible=p.id===active)}
 const distance2=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 function nearestTeammate(){return home.filter(p=>p.role!=="GK").sort((a,b)=>distance2(a.mesh.position,ball.mesh.position)-distance2(b.mesh.position,ball.mesh.position))[0]}
@@ -169,15 +170,19 @@ function controlBall(player,input,dt){
   ball.v.x=player.velocity.x*.78;ball.v.z=player.velocity.z*.78;
   if(input.pass)pass(player,false,input);if(input.through)pass(player,true,input);
 }
-function resetKickoff(){
+function resetKickoff(team=0){
   world.players.forEach(p=>{p.mesh.position.set(p.home.x,0,p.home.z);p.velocity={x:0,z:0};p.stamina=100});
-  const kickoff=home[3];kickoff.mesh.position.set(-2.1,0,0);kickoff.velocity={x:0,z:0};
-  ball.reset();select(kickoff);
+  const kickoffTeam=world.players.filter(p=>p.team===team&&p.role!=="GK");
+  const kickoff=kickoffTeam[3]||kickoffTeam[0];
+  if(kickoff){kickoff.mesh.position.set(team===0?-2.1:2.1,0,0);kickoff.velocity={x:0,z:0};kickoff.mesh.rotation.y=team===0?Math.PI/2:-Math.PI/2;}
+  ball.reset();
+  if(team===0&&kickoff)select(kickoff);else select(home[3]);
 }
 function loop(){
   requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.033);
   if(!match.running){world.render();return}
   match.update(dt);
+  if(match.half!==displayedHalf){displayedHalf=match.half;resetKickoff(match.kickoffTeam);}
   if(match.paused){world.render();return}
   ballReleaseTimer=Math.max(0,ballReleaseTimer-dt);const input=controls.read();let controlled=world.players[active];
   if(input.switch&&performance.now()-lastSwitch>220){select(nearestTeammate());lastSwitch=performance.now();controlled=world.players[active]}
@@ -203,7 +208,7 @@ function loop(){
   ball.update(dt,world.players,team=>{
     match.goal(team);
     ball.reset();
-    resetKickoff();
+    resetKickoff(1-team);
     world.players.filter(p=>p.team===team).forEach(p=>{p.action="idle";p.actionTime=0;p.forceModelAction=false;p.velocity.x=0;p.velocity.z=0;p.celebrating=true;});
     say("GOL! COMEMORAÇÃO!");
   },active);
@@ -217,6 +222,6 @@ $("#play").onclick=()=>{
   world.setTeamColors(homeTeam,awayTeam);
   $("#hud").children[0].innerHTML=crest(homeTeam)+' <strong id="homeScore">0</strong>';
   $("#hud").children[2].innerHTML='<strong id="awayScore">0</strong> '+crest(awayTeam);
-  match.start();charge=0;shotPlayer=null;ballReleaseTimer=0;resetKickoff();$("#start").style.display="none";say(homeTeam.name+" x "+awayTeam.name);
+  match.start();displayedHalf=1;charge=0;shotPlayer=null;ballReleaseTimer=0;resetKickoff(0);$("#start").style.display="none";say(homeTeam.name+" x "+awayTeam.name);
 };
 addEventListener("resize",()=>world.resize());world.resize();loop();
