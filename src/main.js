@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=mf-fix-uniform-celebration-20261127c";
-import { BallPhysics } from "./physics.js?v=mf-fix-uniform-celebration-20261127c";
-import { Controls } from "./controls.js?v=mf-fix-uniform-celebration-20261127c";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-fix-uniform-celebration-20261127c";
-import { Match } from "./match.js?v=mf-fix-uniform-celebration-20261127c";
+import { createScene } from "./scene.js?v=mf-stable-goal-celebration-20261127e";
+import { BallPhysics } from "./physics.js?v=mf-stable-goal-celebration-20261127e";
+import { Controls } from "./controls.js?v=mf-stable-goal-celebration-20261127e";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=mf-stable-goal-celebration-20261127e";
+import { Match } from "./match.js?v=mf-stable-goal-celebration-20261127e";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
@@ -126,7 +126,7 @@ function movePlayer(player,dt,input,controlled){
   player.actionTime=(player.actionTime||0)+dt;
   const moving=speed>.25;
   if(player.mixer&&player.modelActions){
-    const key=player.action==="pass"?"pass":player.action==="shoot"?"shoot":player.action==="celebrate"?"celebrate":moving?"run":"idle";
+    const key=player.action==="pass"?"pass":player.action==="shoot"?"shoot":moving?"run":"idle";
     const next=player.modelActions[key]||player.modelActions.idle;
     if(next&&(next!==player.currentModelAction||player.forceModelAction)){
       player.forceModelAction=false;
@@ -143,7 +143,7 @@ function movePlayer(player,dt,input,controlled){
       player.currentModelAction=next;
     }
     player.mixer.update(dt);
-    if((player.action==="pass"||player.action==="shoot"||player.action==="celebrate")&&player.actionTime>(player.action==="celebrate"?2.4:.62))player.action="idle";
+    if((player.action==="pass"||player.action==="shoot")&&player.actionTime>.62)player.action="idle";
   } else {
     player.legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(player.phase+(i*Math.PI))*Math.min(.72,speed*.085)});
     player.arms?.forEach((arm,i)=>{arm.rotation.x=moving?Math.sin(player.phase+(i===0?0:Math.PI))*.42:0;});
@@ -204,7 +204,7 @@ function loop(){
     match.goal(team);
     ball.reset();
     resetKickoff();
-    world.players.filter(p=>p.team===team).forEach(p=>{p.action="celebrate";p.actionTime=0;p.forceModelAction=true;p.celebrating=true;});
+    world.players.filter(p=>p.team===team).forEach(p=>{p.action="idle";p.actionTime=0;p.forceModelAction=false;p.velocity.x=0;p.velocity.z=0;p.celebrating=true;});
     say("GOL! COMEMORAÇÃO!");
   });
   $("#power").style.width=charge+"%";
