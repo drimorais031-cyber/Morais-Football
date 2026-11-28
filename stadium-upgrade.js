@@ -1,3 +1,39 @@
+// Gramado de alta definição inspirado diretamente na textura do ZIP enviado.
+export function createModernPitchTexture(THREE, mobile = true) {
+  const canvas = document.createElement('canvas');
+  canvas.width = mobile ? 1024 : 2048;
+  canvas.height = mobile ? 680 : 1360;
+  const ctx = canvas.getContext('2d');
+  const lanes = 16, laneWidth = canvas.width / lanes;
+  for (let i = 0; i < lanes; i++) {
+    const gradient = ctx.createLinearGradient(i * laneWidth, 0, (i + 1) * laneWidth, canvas.height);
+    gradient.addColorStop(0, i % 2 ? '#216b32' : '#2c873e');
+    gradient.addColorStop(1, i % 2 ? '#28783a' : '#329348');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
+    ctx.fillStyle = i % 2 ? 'rgba(0,0,0,0.035)' : 'rgba(255,255,255,0.025)';
+    for (let y = 0; y < canvas.height; y += 7) ctx.fillRect(i * laneWidth, y, laneWidth, 1);
+  }
+  for (let y = 0; y < canvas.height; y += 5) {
+    ctx.fillStyle = y % 10 ? 'rgba(255,255,255,0.012)' : 'rgba(0,0,0,0.018)';
+    ctx.fillRect(0, y, canvas.width, 1);
+  }
+  const grainCount = mobile ? 9000 : 28000;
+  for (let i = 0; i < grainCount; i++) {
+    const x = Math.random() * canvas.width, y = Math.random() * canvas.height;
+    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.04)';
+    ctx.fillRect(x, y, 2, 2);
+  }
+  const vignette = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, canvas.width * 0.15, canvas.width / 2, canvas.height / 2, canvas.width * 0.58);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.13)');
+  ctx.fillStyle = vignette; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = Math.min(4, 8);
+  return texture;
+}
+
 // Estádio moderno do Morais Football, adaptado ao campo e à câmera do jogo principal.
 export function buildModernStadium(THREE, scene, mobile = true) {
   const arena = new THREE.Group();
