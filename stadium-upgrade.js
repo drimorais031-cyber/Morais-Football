@@ -75,8 +75,8 @@ export function buildModernStadium(THREE, scene, mobile = true) {
       const z = side * (54.0 + tier * 1.55);
       addBox(119 - tier * 1.3, 0.72, 1.52, concrete, 0, y, z);
       addBox(117 - tier * 1.3, 0.12, 0.16, dark, 0, y + 0.39, z - side * 0.58);
-      for (let i = 0; i < 34; i++) {
-        const x = -24.5 + i * 1.48;
+      for (let i = 0; i < 70; i++) {
+        const x = -51.5 + i * 1.48;
         addBox(1.15, 0.42, 0.58, seatMats[(i + tier * 2 + (side > 0 ? 0 : 2)) % seatMats.length], x, y + 0.43, z - side * 0.22);
         if (tier % 2 === 0 || i % 2 === 0) addSpectator(x, y + 0.95, z - side * 0.28, i * 13 + tier * 31 + side * 7);
       }
@@ -97,8 +97,8 @@ export function buildModernStadium(THREE, scene, mobile = true) {
       const y = 0.9 + tier * 1.05;
       addBox(1.55, 0.72, 76 - tier * 1.5, concrete, x, y, 0);
       addBox(0.16, 0.12, 74 - tier * 1.5, dark, x - side * 0.58, y + 0.39, 0);
-      for (let i = 0; i < 23; i++) {
-        const z = -16.5 + i * 1.48;
+      for (let i = 0; i < 48; i++) {
+        const z = -34.5 + i * 1.48;
         addBox(0.58, 0.42, 1.12, seatMats[(i + tier + (side > 0 ? 1 : 3)) % seatMats.length], x - side * 0.22, y + 0.43, z);
         if (tier % 2 === 0 || i % 2 === 0) addSpectator(x - side * 0.28, y + 0.95, z, i * 17 + tier * 23 + side * 11);
       }
@@ -172,11 +172,11 @@ export function buildModernStadium(THREE, scene, mobile = true) {
   const lampHousing = new THREE.MeshStandardMaterial({ color: 0xf4faff, emissive: 0xc9e9ff, emissiveIntensity: 2.0, metalness: 0.25 });
   for (const xSide of [-1, 1]) for (const zSide of [-1, 1]) {
     const x = xSide * 68, z = zSide * 49;
-    addBox(0.42, 8.8, 0.42, material(0x64798c, 0.42, 0.65), x, 4.4, z);
-    addBox(3.8, 0.55, 0.85, lampHousing, x, 8.9, z);
-    for (let i = 0; i < 5; i++) addBox(0.48, 0.24, 0.1, lampHousing, x - 1.35 + i * 0.68, 8.9, z - 0.46);
+    addBox(0.42, 26, 0.42, material(0x64798c, 0.42, 0.65), x, 13, z);
+    addBox(5.5, 3.2, 1.2, lampHousing, x, 25.5, z);
+    for (let i = 0; i < 5; i++) addBox(0.58, 0.32, 0.12, lampHousing, x - 1.55 + i * 0.78, 25.5, z - 0.66);
     const light = new THREE.PointLight(0xdbeeff, mobile ? 8 : 12, 62, 2);
-    light.position.set(x, 8.3, z); light.castShadow = false; arena.add(light);
+    light.position.set(x, 24, z); light.castShadow = false; arena.add(light);
   }
 
   // Bandeiras superiores discretas, animadas pelo vento no loop do jogo.
