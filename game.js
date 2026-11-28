@@ -56,6 +56,39 @@ function buildPitch(){
  const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-12,28,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
  const grass=mat(0x176b37);box(FIELD_X,.3,FIELD_Z,grass,0,-.2,0);
  for(let i=0;i<12;i++)box(FIELD_X/12,.012,FIELD_Z,mat(i%2?0x1b743d:0x1d7b41),-FIELD_X/2+FIELD_X/24+i*FIELD_X/12,-.035,0);
+ // Textura de gramado em alta definição: faixas de corte, variação natural e grão fino.
+ // Uma única textura 2D mantém o custo baixo no celular.
+ const pitchCanvas=document.createElement('canvas');
+ pitchCanvas.width=1024;pitchCanvas.height=640;
+ const pitchCtx=pitchCanvas.getContext('2d');
+ pitchCtx.fillStyle='#176b37';pitchCtx.fillRect(0,0,1024,640);
+ for(let i=0;i<12;i++){
+  const x=i*1024/12;
+  pitchCtx.fillStyle=i%2?'#1b743d':'#218047';
+  pitchCtx.fillRect(x,0,Math.ceil(1024/12),640);
+  const shade=pitchCtx.createLinearGradient(x,0,x+1024/12,0);
+  shade.addColorStop(0,'rgba(0,0,0,.035)');
+  shade.addColorStop(.5,'rgba(255,255,255,.025)');
+  shade.addColorStop(1,'rgba(0,0,0,.045)');
+  pitchCtx.fillStyle=shade;pitchCtx.fillRect(x,0,1024/12,640);
+ }
+ for(let i=0;i<18000;i++){
+  const x=Math.random()*1024,y=Math.random()*640;
+  pitchCtx.fillStyle=Math.random()>.5?'rgba(230,255,225,.045)':'rgba(0,25,8,.045)';
+  pitchCtx.fillRect(x,y,1+Math.random()*2,1);
+ }
+ const pitchTexture=new THREE.CanvasTexture(pitchCanvas);
+ pitchTexture.colorSpace=THREE.SRGBColorSpace;
+ pitchTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+ const pitchSurface=new THREE.Mesh(
+  new THREE.PlaneGeometry(FIELD_X,FIELD_Z),
+  new THREE.MeshStandardMaterial({map:pitchTexture,roughness:1,metalness:0})
+ );
+ pitchSurface.rotation.x=-Math.PI/2;
+ pitchSurface.position.y=-.018;
+ pitchSurface.receiveShadow=true;
+ scene.add(pitchSurface);
+
  const white=0xe8f2df;
  line([[-FIELD_X/2, -FIELD_Z/2],[FIELD_X/2,-FIELD_Z/2],[FIELD_X/2,FIELD_Z/2],[-FIELD_X/2,FIELD_Z/2],[-FIELD_X/2,-FIELD_Z/2]],white);
  line([[0,-FIELD_Z/2],[0,FIELD_Z/2]],white);
@@ -159,7 +192,18 @@ function buildPitch(){
  }
  // Painéis de publicidade na borda do campo e placar principal.
  for(const side of [-1,1]){
-  box(48,.65,.18,mat(side===1?0xd9b52d:0x1c4d86),0,.18,side*15.35);
+  box(48,.65,.18,new THREE.MeshStandardMaterial({
+   color:side===1?0x173d67:0x174b38,
+   emissive:side===1?0x0a2547:0x0a3823,
+   emissiveIntensity:.48,roughness:.48,metalness:.18
+  }),0,.18,side*15.35);
+  // Segmentos luminosos de LED para dar aparência de publicidade eletrônica.
+  const ledPalette=[0xb8e83f,0x35b8ff,0xffffff,0xffd34e,0xf04455,0x58d6a5];
+  for(let i=0;i<12;i++){
+   const color=ledPalette[(i+(side===1?0:2))%ledPalette.length];
+   const ledMat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.34,roughness:.42});
+   box(3.55,.36,.035,ledMat,-22+i*4,.18,side*15.245);
+  }
  }
  box(.35,3.2,.35,darkConcrete,0,7,-30.4);
  box(9,.18,.45,mat(0x1a2934),0,8.6,-30.4);
