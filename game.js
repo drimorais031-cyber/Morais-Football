@@ -6,7 +6,7 @@ try {
   } catch (firstError) {
     THREE = await import('https://unpkg.com/three@0.161.0/build/three.module.js');
   }
-  const stadiumModule = await import('./stadium-upgrade.js?v=morais-arena-final-20261128');
+  const stadiumModule = await import('./stadium-upgrade.js?v=morais-arena-livefix-20261128-b');
   buildModernStadium = stadiumModule.buildModernStadium;
   createModernPitchTexture = stadiumModule.createModernPitchTexture;
 } catch (loadError) {
