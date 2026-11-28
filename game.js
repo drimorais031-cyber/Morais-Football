@@ -1,11 +1,14 @@
 (async () => {
-let THREE;
+let THREE, buildModernStadium, createModernPitchTexture;
 try {
   try {
     THREE = await import('https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js');
   } catch (firstError) {
     THREE = await import('https://unpkg.com/three@0.161.0/build/three.module.js');
   }
+  const stadiumModule = await import('./stadium-upgrade.js?v=morais-arena-20261128');
+  buildModernStadium = stadiumModule.buildModernStadium;
+  createModernPitchTexture = stadiumModule.createModernPitchTexture;
 } catch (loadError) {
   console.error('Falha ao carregar o motor 3D:', loadError);
   const viewport = document.getElementById('viewport');
@@ -49,37 +52,16 @@ function makePlayer(team,index,x,z){
  return {group,ring,legs,arms,team,index,x,z,vx:0,vz:0,homeX:x,homeZ:z,speed:index===0?6.2:7.2};
 }
 function buildPitch(){
- scene=new THREE.Scene();scene.background=new THREE.Color(0x9fc4d5);scene.fog=new THREE.Fog(0x9fc4d5,55,105);
+ const mobileGraphics=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||window.innerWidth<900;
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x101b2c);scene.fog=new THREE.Fog(0x101b2c,58,112);
  camera=new THREE.PerspectiveCamera(48,1,.1,180);camera.position.set(0,25,16);camera.lookAt(0,.8,0);
- renderer=new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;viewport.appendChild(renderer.domElement);
+ renderer=new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,mobileGraphics?1.35:1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;viewport.appendChild(renderer.domElement);
  scene.add(new THREE.HemisphereLight(0xe8f4ff,0x31502b,2.0));
  const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-12,28,18);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
  const grass=mat(0x176b37);box(FIELD_X,.3,FIELD_Z,grass,0,-.2,0);
  for(let i=0;i<12;i++)box(FIELD_X/12,.012,FIELD_Z,mat(i%2?0x1b743d:0x1d7b41),-FIELD_X/2+FIELD_X/24+i*FIELD_X/12,-.035,0);
- // Textura de gramado em alta definição: faixas de corte, variação natural e grão fino.
- // Uma única textura 2D mantém o custo baixo no celular.
- const pitchCanvas=document.createElement('canvas');
- pitchCanvas.width=1024;pitchCanvas.height=640;
- const pitchCtx=pitchCanvas.getContext('2d');
- pitchCtx.fillStyle='#176b37';pitchCtx.fillRect(0,0,1024,640);
- for(let i=0;i<12;i++){
-  const x=i*1024/12;
-  pitchCtx.fillStyle=i%2?'#1b743d':'#218047';
-  pitchCtx.fillRect(x,0,Math.ceil(1024/12),640);
-  const shade=pitchCtx.createLinearGradient(x,0,x+1024/12,0);
-  shade.addColorStop(0,'rgba(0,0,0,.035)');
-  shade.addColorStop(.5,'rgba(255,255,255,.025)');
-  shade.addColorStop(1,'rgba(0,0,0,.045)');
-  pitchCtx.fillStyle=shade;pitchCtx.fillRect(x,0,1024/12,640);
- }
- for(let i=0;i<18000;i++){
-  const x=Math.random()*1024,y=Math.random()*640;
-  pitchCtx.fillStyle=Math.random()>.5?'rgba(230,255,225,.045)':'rgba(0,25,8,.045)';
-  pitchCtx.fillRect(x,y,1+Math.random()*2,1);
- }
- const pitchTexture=new THREE.CanvasTexture(pitchCanvas);
- pitchTexture.colorSpace=THREE.SRGBColorSpace;
- pitchTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+ // Textura de gramado do estádio enviado: faixas de corte, grão e vinheta.
+ const pitchTexture=createModernPitchTexture(THREE,mobileGraphics);
  const pitchSurface=new THREE.Mesh(
   new THREE.PlaneGeometry(FIELD_X,FIELD_Z),
   new THREE.MeshStandardMaterial({map:pitchTexture,roughness:1,metalness:0})
@@ -151,117 +133,8 @@ function buildPitch(){
   const points=[];for(let i=0;i<netLines.length;i++)points.push(new THREE.Vector3(netLines[i][0],netLines[i][1],netLines[i][2]));
   scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.72})));
  }
- // Estádio completo ao redor do gramado: arquibancadas em quatro lados,
- // setores em níveis, público simplificado, cobertura e refletores.
- const concrete=mat(0x68747b),darkConcrete=mat(0x35434b),seatRed=mat(0xc62836),seatBlue=mat(0x2456a6),seatYellow=mat(0xe0b52d),seatWhite=mat(0xdce4e7);
- // Laterais: três níveis de arquibancada com degraus e setores coloridos.
- for(const side of [-1,1]){
-  for(let tier=0;tier<3;tier++){
-   const z=side*(18.2+tier*2.45),y=.45+tier*1.18;
-   box(50,.75,2.7,concrete,0,y-.35,z);
-   box(49,.16,.22,darkConcrete,0,y+.18,z-side*.92);
-   for(let i=0;i<34;i++){
-    const x=-23.8+i*1.45;
-    const colors=[seatRed,seatBlue,seatYellow,seatWhite];
-    box(1.12,.42,.72,colors[(i+tier*3+(side===1?0:2))%4],x,y+.38,z-side*.28);
-   }
-  }
-  // Cobertura suspensa e treliças externas.
-  box(51,.42,4.2,mat(0x263943),0,5.35,side*26.1);
-  box(50,.12,3.7,mat(0x91a6ad),0,5.58,side*26.1);
-  for(const x of [-23,-12,0,12,23]){
-   box(.32,5.1,.32,darkConcrete,x,2.8,side*27.2);
-   box(.42,.25,3.5,mat(0x71858d),x,5.05,side*25.7);
-  }
- }
- // Fundos atrás dos gols, fechando o estádio como uma arena contínua.
- for(const side of [-1,1]){
-  for(let tier=0;tier<3;tier++){
-   const x=side*(25.8+tier*2.35),y=.42+tier*1.15;
-   box(2.7,.72,34,concrete,x,y-.32,0);
-   box(.18,.14,33,darkConcrete,x-side*.92,y+.18,0);
-   for(let i=0;i<23;i++){
-    const z=-15.2+i*1.38;
-    const colors=[seatBlue,seatRed,seatWhite,seatYellow];
-    box(.72,.4,1.05,colors[(i+tier+(side===1?1:0))%4],x-side*.28,y+.36,z);
-   }
-  }
-  box(4.1,.4,35,mat(0x263943),side*32.2,5.25,0);
-  box(3.6,.12,34,mat(0x91a6ad),side*32.2,5.48,0);
-  for(const z of [-14,-7,0,7,14])box(.32,5,.32,darkConcrete,side*30.2,2.7,z);
- }
- // Painéis de publicidade na borda do campo e placar principal.
- for(const side of [-1,1]){
-  box(48,.65,.18,new THREE.MeshStandardMaterial({
-   color:side===1?0x173d67:0x174b38,
-   emissive:side===1?0x0a2547:0x0a3823,
-   emissiveIntensity:.48,roughness:.48,metalness:.18
-  }),0,.18,side*15.35);
-  // Segmentos luminosos de LED para dar aparência de publicidade eletrônica.
-  const ledPalette=[0xb8e83f,0x35b8ff,0xffffff,0xffd34e,0xf04455,0x58d6a5];
-  for(let i=0;i<12;i++){
-   const color=ledPalette[(i+(side===1?0:2))%ledPalette.length];
-   const ledMat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.34,roughness:.42});
-   box(3.55,.36,.035,ledMat,-22+i*4,.18,side*15.245);
-  }
- }
- box(.35,3.2,.35,darkConcrete,0,7,-30.4);
- box(9,.18,.45,mat(0x1a2934),0,8.6,-30.4);
- box(8.6,2.1,.12,mat(0x153c53),0,7.45,-30.15);
- // Refletores nas quatro extremidades da cobertura.
- for(const x of [-22,22])for(const z of [-25.5,25.5]){
-  box(.28,7,.28,mat(0x71838a),x,3.5,z);
-  box(2.8,.32,.65,mat(0xeaf6ff),x,7.1,z);
-  for(let i=0;i<5;i++)box(.38,.2,.08,mat(0xffffff),x-1.05+i*.52,7.1,z-.36);
- }
- // Torcida nas arquibancadas: instâncias leves para manter bom desempenho no celular.
- const crowdBodyGeo=new THREE.SphereGeometry(.15,.0+8,7);
- const crowdHeadGeo=new THREE.SphereGeometry(.105,8,7);
- const crowdBodyMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95});
- const crowdHeadMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9});
- const crowdPositions=[];
- // Pessoas sentadas nas três arquibancadas laterais.
- for(const side of [-1,1])for(let tier=0;tier<3;tier++){
-  const z=side*(18.2+tier*2.45)-side*.28,y=.45+tier*1.18;
-  for(let i=0;i<34;i++)crowdPositions.push({x:-23.8+i*1.45,z,y:y+.72,seed:i*7+tier*31+(side===1?0:17)});
- }
- // Pessoas também atrás dos gols.
- for(const side of [-1,1])for(let tier=0;tier<3;tier++){
-  const x=side*(25.8+tier*2.35)-side*.28,y=.42+tier*1.15;
-  for(let i=0;i<23;i++)crowdPositions.push({x,z:-15.2+i*1.38,y:y+.7,seed:i*11+tier*29+(side===1?13:3)});
- }
- const crowdBodies=new THREE.InstancedMesh(crowdBodyGeo,crowdBodyMat,crowdPositions.length);
- const crowdHeads=new THREE.InstancedMesh(crowdHeadGeo,crowdHeadMat,crowdPositions.length);
- const dummy=new THREE.Object3D(),shirtColors=[0xc8323c,0x2461a8,0xe0bd36,0xe8e8e2,0x27764a,0x242b34,0x7c4ba5,0xd87532];
- const skinColors=[0xf0c49c,0xd9a17c,0xb97854,0x8e6049];
- crowdPositions.forEach((p,i)=>{
-  const sway=((p.seed*17)%9)*.018;
-  dummy.position.set(p.x,p.y,p.z);dummy.rotation.set(0,0,((p.seed%5)-2)*.035);dummy.scale.set(.85,1,.8);dummy.updateMatrix();crowdBodies.setMatrixAt(i,dummy.matrix);
-  crowdBodies.setColorAt(i,new THREE.Color(shirtColors[p.seed%shirtColors.length]));
-  dummy.position.set(p.x+sway,p.y+.27,p.z);dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();crowdHeads.setMatrixAt(i,dummy.matrix);
-  crowdHeads.setColorAt(i,new THREE.Color(skinColors[p.seed%skinColors.length]));
- });
- crowdBodies.instanceMatrix.needsUpdate=true;crowdHeads.instanceMatrix.needsUpdate=true;
- crowdBodies.castShadow=false;crowdHeads.castShadow=false;scene.add(crowdBodies,crowdHeads);
- // Bandeiras grandes dos clubes nos anéis superiores, com movimento suave de vento.
- scene.userData.stadiumFlags=[];
- const flagColors=[0xb8e83f,0xf2d52e,0xd51e2b,0x2456a6,0xf4f4f4];
- for(const side of [-1,1])for(let i=0;i<7;i++){
-  const x=-21+i*7,z=side*27.5,group=new THREE.Group();
-  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,3.4,8),mat(0xcbd5d9,.45));pole.position.y=1.7;group.add(pole);
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.Float32BufferAttribute([0,3.15,0,1.65,2.72,0,0,2.25,0],3));
-  geo.setIndex([0,1,2]);geo.computeVertexNormals();
-  const cloth=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:flagColors[(i+(side===1?0:2))%flagColors.length],side:THREE.DoubleSide,roughness:.8}));
-  group.add(cloth);group.position.set(x,5.65,z);scene.add(group);
-  scene.userData.stadiumFlags.push({cloth,phase:i*.8+side});
- }
- // Iluminação de estádio: refletores fortes apontados para o gramado.
- for(const x of [-22,22])for(const z of [-25.5,25.5]){
-  const lamp=new THREE.PointLight(0xeaf4ff,38,92,2);
-  lamp.position.set(x,8.1,z);lamp.castShadow=false;scene.add(lamp);
- }
- const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat(0x405b3d));ground.rotation.x=-Math.PI/2;ground.position.y=-.4;scene.add(ground);
+ // Integração do estádio moderno do ZIP, dimensionado para o campo e a jogabilidade atuais.
+ buildModernStadium(THREE,scene,mobileGraphics);
 }
 function setup(){
  players=[];for(let t=0;t<2;t++)formations.forEach((p,i)=>{const x=t===0?p[0]:-p[0],z=t===0?p[1]:-p[1];players.push(makePlayer(t,i,x,z))});
@@ -379,7 +252,7 @@ function start(){
  setup();$('menu').classList.add('hidden');$('game').classList.remove('hidden');$('loading').style.display='none';running=true;paused=false;$('status').textContent='Partida em andamento';$('pauseBtn').textContent='PAUSAR';last=performance.now();cancelAnimationFrame(raf);resize();raf=requestAnimationFrame(loop);
  } catch(error) { console.error('Erro ao iniciar partida:',error); running=false; const msg=document.createElement('div');msg.style.cssText='padding:16px;margin:10px;color:#fff;background:#391b1b;border:1px solid #b84b4b;border-radius:10px;font:13px/1.5 Arial';msg.textContent='Não foi possível iniciar a partida 3D: '+error.message;$('loading').style.display='none';viewport.appendChild(msg); }
 }
-function resize(){if(!renderer)return;const rect=viewport.getBoundingClientRect(),w=Math.floor(rect.width),h=Math.floor(rect.height);if(!w||!h)return;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.domElement.style.width='100%';renderer.domElement.style.height='100%'}
+function resize(){if(!renderer)return;const rect=viewport.getBoundingClientRect(),w=Math.floor(rect.width),h=Math.floor(rect.height);if(!w||!h)return;const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||window.innerWidth<900;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1.35:1.6));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.domElement.style.width='100%';renderer.domElement.style.height='100%'}
 function resetGoal(){players.forEach(p=>{p.x=p.homeX;p.z=p.homeZ;p.vx=p.vz=0;p.group.position.set(p.x,0,p.z)});ball.position.set(0,.36,0);ball.userData.vx=ball.userData.vz=ball.userData.vy=0;possessionTeam=null;possessionCandidate=null;possessionCandidateTime=0;goalPause=1.2}
 function updatePossession(dt){
  // Considera posse apenas quando um atleta de linha está realmente perto da bola, baixa e sem grande velocidade.
@@ -593,6 +466,7 @@ function loop(t){
   camera.lookAt(tx,.8,tz);
  }
  if(scene.userData.stadiumFlags){const wind=performance.now()*.001;scene.userData.stadiumFlags.forEach(f=>{f.cloth.rotation.y=Math.sin(wind*2.1+f.phase)*.16;f.cloth.rotation.z=Math.sin(wind*1.6+f.phase)*.07})}
+ if(scene.userData.stadiumLEDTextures)scene.userData.stadiumLEDTextures.forEach(tex=>{tex.offset.x+=dt*.045});
  renderer.render(scene,camera);raf=requestAnimationFrame(loop)
 }
 $('startBtn').addEventListener('click',start);
