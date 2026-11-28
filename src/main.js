@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { createScene } from "./scene.js?v=morais-ball-control-20261127";
-import { BallPhysics } from "./physics.js?v=morais-ball-control-20261127";
-import { Controls } from "./controls.js?v=morais-ball-control-20261127";
-import { updateAI, updateGoalkeepers } from "./ai.js?v=morais-ball-control-20261127";
-import { Match } from "./match.js?v=morais-ball-control-20261127";
+import { createScene } from "./scene.js?v=morais-recovery-5x5-20261128";
+import { BallPhysics } from "./physics.js?v=morais-recovery-5x5-20261128";
+import { Controls } from "./controls.js?v=morais-recovery-5x5-20261128";
+import { updateAI, updateGoalkeepers } from "./ai.js?v=morais-recovery-5x5-20261128";
+import { Match } from "./match.js?v=morais-recovery-5x5-20261128";
 
 const $=s=>document.querySelector(s);
 const TEAMS=[
