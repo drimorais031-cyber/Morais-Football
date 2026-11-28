@@ -72,7 +72,7 @@ export function buildModernStadium(THREE, scene, mobile = true) {
   for (const side of [-1, 1]) {
     for (let tier = 0; tier < 5; tier++) {
       const y = 0.95 + tier * 1.05;
-      const z = side * (20.7 + tier * 1.55);
+      const z = side * (54.0 + tier * 1.55);
       addBox(119 - tier * 1.3, 0.72, 1.52, concrete, 0, y, z);
       addBox(117 - tier * 1.3, 0.12, 0.16, dark, 0, y + 0.39, z - side * 0.58);
       for (let i = 0; i < 34; i++) {
@@ -82,18 +82,18 @@ export function buildModernStadium(THREE, scene, mobile = true) {
       }
     }
     // Cobertura suspensa e anel luminoso.
-    addBox(128, 0.72, 18, material(0x172638, 0.34, 0.62), 0, 18.1, side * 30.2);
-    addBox(126, 0.18, 0.34, material(0x39bdf8, 0.28, 0.38), 0, 17.62, side * 38.4);
+    addBox(128, 0.72, 18, material(0x172638, 0.34, 0.62), 0, 18.1, side * 59.0);
+    addBox(126, 0.18, 0.34, material(0x39bdf8, 0.28, 0.38), 0, 17.62, side * 68.5);
     for (const x of [-24, -12, 0, 12, 24]) {
-      addBox(0.8, 8.5, 0.8, concrete, x, 4.7, side * 29.2);
-      addBox(0.9, 0.28, 14, material(0x7f95a8, 0.38, 0.55), x, 17.2, side * 30.2);
+      addBox(0.8, 8.5, 0.8, concrete, x, 4.7, side * 58.5);
+      addBox(0.9, 0.28, 14, material(0x7f95a8, 0.38, 0.55), x, 17.2, side * 59.0);
     }
   }
 
   // Arquibancadas atrás dos gols fecham os quatro lados da arena.
   for (const side of [-1, 1]) {
     for (let tier = 0; tier < 5; tier++) {
-      const x = side * (25.5 + tier * 1.55);
+      const x = side * (74.0 + tier * 1.55);
       const y = 0.9 + tier * 1.05;
       addBox(1.55, 0.72, 76 - tier * 1.5, concrete, x, y, 0);
       addBox(0.16, 0.12, 74 - tier * 1.5, dark, x - side * 0.58, y + 0.39, 0);
@@ -103,9 +103,9 @@ export function buildModernStadium(THREE, scene, mobile = true) {
         if (tier % 2 === 0 || i % 2 === 0) addSpectator(x - side * 0.28, y + 0.95, z, i * 17 + tier * 23 + side * 11);
       }
     }
-    addBox(18, 0.72, 88, material(0x172638, 0.34, 0.62), side * 34.1, 18.0, 0);
-    addBox(0.34, 0.18, 86, material(0x39bdf8, 0.28, 0.38), side * 43.3, 17.55, 0);
-    for (const z of [-16, -8, 0, 8, 16]) addBox(8, 0.28, 0.8, material(0x7f95a8, 0.38, 0.55), side * 34.1, 17.2, z);
+    addBox(18, 0.72, 88, material(0x172638, 0.34, 0.62), side * 79.0, 18.0, 0);
+    addBox(0.34, 0.18, 86, material(0x39bdf8, 0.28, 0.38), side * 88.2, 17.55, 0);
+    for (const z of [-16, -8, 0, 8, 16]) addBox(8, 0.28, 0.8, material(0x7f95a8, 0.38, 0.55), side * 79.0, 17.2, z);
   }
 
   // Público em instâncias: muitos torcedores com poucas chamadas de desenho.
@@ -129,8 +129,8 @@ export function buildModernStadium(THREE, scene, mobile = true) {
   const portalTrim = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0ea5e9, emissiveIntensity: 1.1 });
   for (const side of [-1, 1]) {
     for (const z of [-12, 0, 12]) {
-      addBox(0.5, 3.7, 5.6, portalMat, side * 25.15, 1.95, z);
-      addBox(0.18, 3.9, 5.9, portalTrim, side * 24.86, 1.95, z);
+      addBox(0.5, 3.7, 5.6, portalMat, side * 73.2, 1.95, z);
+      addBox(0.18, 3.9, 5.9, portalTrim, side * 72.8, 1.95, z);
     }
   }
 
@@ -139,7 +139,7 @@ export function buildModernStadium(THREE, scene, mobile = true) {
   const frame = material(0x14263a, 0.42, 0.5);
   for (const zSide of [-1, 1]) {
     const x = 0;
-    const z = zSide * 18.5;
+    const z = zSide * 43.5;
     addBox(9.2, 2.1, 0.16, glass, x, 1.12, z);
     addBox(9.5, 0.16, 2.25, glass, x, 2.25, z + zSide * 0.45);
     addBox(8.7, 0.42, 0.62, frame, x, 0.46, z);
@@ -162,16 +162,16 @@ export function buildModernStadium(THREE, scene, mobile = true) {
   const ledMat = new THREE.MeshStandardMaterial({ map: ledTexture, emissiveMap: ledTexture, emissive: 0xffffff, emissiveIntensity: 0.78, roughness: 0.4 });
   for (const side of [-1, 1]) {
     const board = new THREE.Mesh(new THREE.BoxGeometry(112, 1.05, 0.32), ledMat);
-    board.position.set(0, 0.58, side * 16.4); arena.add(board);
+    board.position.set(0, 0.58, side * 40.5); arena.add(board);
   }
   const endLedMat = material(0x153d5a, 0.38, 0.25);
   endLedMat.emissive = new THREE.Color(0x0b6b92); endLedMat.emissiveIntensity = 0.65;
-  for (const side of [-1, 1]) addBox(0.32, 1.05, 70, endLedMat, side * 25.0, 0.58, 0);
+  for (const side of [-1, 1]) addBox(0.32, 1.05, 70, endLedMat, side * 59.5, 0.58, 0);
 
   // Refletores nos quatro cantos: luz sem sombras para preservar FPS no celular.
   const lampHousing = new THREE.MeshStandardMaterial({ color: 0xf4faff, emissive: 0xc9e9ff, emissiveIntensity: 2.0, metalness: 0.25 });
   for (const xSide of [-1, 1]) for (const zSide of [-1, 1]) {
-    const x = xSide * 29.5, z = zSide * 26.5;
+    const x = xSide * 68, z = zSide * 49;
     addBox(0.42, 8.8, 0.42, material(0x64798c, 0.42, 0.65), x, 4.4, z);
     addBox(3.8, 0.55, 0.85, lampHousing, x, 8.9, z);
     for (let i = 0; i < 5; i++) addBox(0.48, 0.24, 0.1, lampHousing, x - 1.35 + i * 0.68, 8.9, z - 0.46);
@@ -191,7 +191,7 @@ export function buildModernStadium(THREE, scene, mobile = true) {
     flagGeo.setIndex([0,1,2]); flagGeo.computeVertexNormals();
     const cloth = new THREE.Mesh(flagGeo, new THREE.MeshStandardMaterial({ color: flagColors[(i + (side > 0 ? 0 : 2)) % flagColors.length], side: THREE.DoubleSide, roughness: 0.78 }));
     poleGroup.add(cloth);
-    poleGroup.position.set(-21 + i * 8.4, 7.9, side * 29.0);
+    poleGroup.position.set(-54 + i * 21.6, 7.9, side * 68.5);
     arena.add(poleGroup);
     scene.userData.stadiumFlags.push({ cloth, phase: i * 0.75 + side });
   }
